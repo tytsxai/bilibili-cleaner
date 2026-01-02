@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B站账号快速清理工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>B站账号快速清理工具</h1>
+            <p class="subtitle">批量清理关注、收藏、动态和历史记录</p>
+        </header>
+
+        <main>
+            <!-- 登录界面 -->
+            <div id="login-view" class="view">
+                <div class="card">
+                    <h2>扫码登录</h2>
+                    <div class="qrcode-container">
+                        <div id="qrcode-wrapper">
+                            <img id="qrcode-img" src="" alt="登录二维码" class="hidden">
+                            <div id="qrcode-loading">获取二维码中...</div>
+                            <div id="qrcode-expired" class="overlay hidden">
+                                <span>已过期<br>点击刷新</span>
+                            </div>
+                        </div>
+                        <p id="login-status">请使用哔哩哔哩App扫码</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主控制台界面 -->
+            <div id="dashboard-view" class="view hidden">
+                <div class="card user-card">
+                    <div class="user-info">
+                        <span class="label">当前用户UID:</span>
+                        <span id="user-mid" class="value">-</span>
+                    </div>
+                    <button id="logout-btn" class="btn btn-text">退出登录</button>
+                </div>
+
+                <div class="grid-layout">
+                    <!-- 功能控制区 -->
+                    <div class="card actions-card">
+                        <h2>清理选项</h2>
+                        <div class="action-list">
+                            <div class="action-item">
+                                <div class="action-info">
+                                    <h3>清理关注</h3>
+                                    <p>批量取消所有关注的UP主</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="app.clean('followings')">执行</button>
+                            </div>
+                            <div class="action-item">
+                                <div class="action-info">
+                                    <h3>清理收藏</h3>
+                                    <p>批量删除所有收藏夹内的视频</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="app.clean('favorites')">执行</button>
+                            </div>
+                            <div class="action-item">
+                                <div class="action-info">
+                                    <h3>清理动态</h3>
+                                    <p>批量删除发布的动态</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="app.clean('dynamics')">执行</button>
+                            </div>
+                            <div class="action-item">
+                                <div class="action-info">
+                                    <h3>清理历史</h3>
+                                    <p>清空观看历史记录</p>
+                                </div>
+                                <button class="btn btn-primary" onclick="app.clean('history')">执行</button>
+                            </div>
+                            <div class="action-item highlight">
+                                <div class="action-info">
+                                    <h3>一键清理所有</h3>
+                                    <p>同时执行以上所有清理操作</p>
+                                </div>
+                                <button class="btn btn-danger" onclick="app.clean('all')">全部清理</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 进度和日志区 -->
+                    <div class="card log-card">
+                        <div class="log-header">
+                            <h2>执行日志</h2>
+                            <button class="btn btn-small" onclick="app.clearLog()">清空日志</button>
+                        </div>
+                        <div id="log-container" class="log-container">
+                            <div class="log-placeholder">准备就绪，等待指令...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>本工具仅供学习交流使用，请谨慎操作数据。</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
