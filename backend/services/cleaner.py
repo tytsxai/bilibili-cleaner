@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
-from backend.api import DynamicApi, FavoriteApi, HistoryApi, RelationApi
+from backend.api import CommentApi, DynamicApi, FavoriteApi, HistoryApi, RelationApi
 from backend.api.client import BiliApiClient
 
 
@@ -19,6 +19,7 @@ class CleanerService:
         self._favorite_api = FavoriteApi(client)
         self._dynamic_api = DynamicApi(client)
         self._history_api = HistoryApi(client)
+        self._comment_api = CommentApi(client)
 
     async def clear_all_followings(self, mid: int) -> CleanResult:
         total = 0
@@ -87,6 +88,46 @@ class CleanerService:
     async def clear_history(self) -> CleanResult:
         await self._history_api.clear_history()
         return CleanResult(0)
+
+    async def clear_all_comments(self) -> CleanResult:
+        """清理用户发布的评论（通过回复历史获取）"""
+        total = 0
+        cursor_id = 0
+        safety = 0
+        while True:
+            data = await self._comment_api.get_reply_history(cursor_id)
+            items = data.get("items") if isinstance(data, dict) else None
+            if not isinstance(items, list) or not items:
+                break
+            for item in items:
+                if not isinstance(item, Mapping):
+                    continue
+                # 提取评论信息
+                item_data = item.get("item") if isinstance(item, Mapping) else None
+                if not isinstance(item_data, dict):
+                    continue
+                oid = _safe_int(item_data.get("subject_id"))
+                rpid = _safe_int(item_data.get("target_reply_id"))
+                comment_type = _safe_int(item_data.get("business_id")) or 1
+                if oid and rpid:
+                    try:
+                        await self._comment_api.delete_comment(comment_type, oid, rpid)
+                        total += 1
+                    except Exception:
+                        pass
+            # 获取下一页游标
+            cursor = data.get("cursor") if isinstance(data, dict) else None
+            if not isinstance(cursor, dict):
+                break
+            next_id = _safe_int(cursor.get("id"))
+            is_end = cursor.get("is_end", True)
+            if is_end or not next_id or next_id == cursor_id:
+                break
+            cursor_id = next_id
+            safety += 1
+            if safety > 100:
+                break
+        return CleanResult(total)
 
     @staticmethod
     def _extract_following_mids(data: Mapping[str, Any]) -> list[int]:

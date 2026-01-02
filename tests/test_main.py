@@ -8,6 +8,7 @@ import pytest
 import respx
 
 from backend.api.auth import GENERATE_QRCODE_URL, POLL_QRCODE_URL
+from backend.api.comment import DELETE_COMMENT_URL, REPLY_HISTORY_URL
 from backend.api.dynamic import DELETE_DYNAMIC_URL, DYNAMICS_URL
 from backend.api.favorite import BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL
 from backend.api.history import CLEAR_HISTORY_URL
@@ -158,6 +159,9 @@ async def test_clean_all(async_client: httpx.AsyncClient, auth_headers: dict[str
         router.post(CLEAR_HISTORY_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
         )
+        router.get(REPLY_HISTORY_URL).mock(
+            return_value=httpx.Response(200, json={"code": 0, "data": {"items": [], "cursor": {"is_end": True}}})
+        )
         response = await async_client.post("/api/clean/all", json={"mid": 100}, headers=auth_headers)
 
     assert response.status_code == 200
@@ -167,6 +171,7 @@ async def test_clean_all(async_client: httpx.AsyncClient, auth_headers: dict[str
         "followings": 1,
         "favorites": 1,
         "dynamics": 1,
+        "comments": 0,
         "history": 0,
     }
     assert payload["total"] == 3

@@ -123,6 +123,17 @@ async def clean_history(
     return {"success": True, "count": result.count}
 
 
+@app.post("/api/clean/comments")
+async def clean_comments(
+    auth: tuple[str, str] = Depends(get_auth_headers),
+) -> dict[str, Any]:
+    sessdata, bili_jct = auth
+    async with BiliApiClient(sessdata=sessdata, bili_jct=bili_jct) as client:
+        service = CleanerService(client)
+        result = await service.clear_all_comments()
+    return {"success": True, "count": result.count}
+
+
 @app.post("/api/clean/all")
 async def clean_all(
     payload: MidRequest,
@@ -134,14 +145,16 @@ async def clean_all(
         followings = await service.clear_all_followings(payload.mid)
         favorites = await service.clear_all_favorites(payload.mid)
         dynamics = await service.clear_all_dynamics(payload.mid)
+        comments = await service.clear_all_comments()
         history = await service.clear_history()
-    total = followings.count + favorites.count + dynamics.count + history.count
+    total = followings.count + favorites.count + dynamics.count + comments.count + history.count
     return {
         "success": True,
         "counts": {
             "followings": followings.count,
             "favorites": favorites.count,
             "dynamics": dynamics.count,
+            "comments": comments.count,
             "history": history.count,
         },
         "total": total,
