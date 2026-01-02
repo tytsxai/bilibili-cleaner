@@ -1,5 +1,10 @@
 # Bilibili Cleaner - B站账号快速清理工具
 
+[![CI](https://github.com/tytsxai/bilibili-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/tytsxai/bilibili-cleaner/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen.svg)](tests/)
+
 一个帮助用户快速批量清理B站账号数据的工具，支持 Web 界面操作。
 
 ## 功能特性
@@ -25,7 +30,7 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/YOUR_USERNAME/bilibili-cleaner.git
+git clone https://github.com/tytsxai/bilibili-cleaner.git
 cd bilibili-cleaner
 
 # 安装依赖
