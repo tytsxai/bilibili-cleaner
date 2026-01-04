@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <button class="theme-toggle" id="theme-toggle" title="切换主题">🌙</button>
     <div class="container">
         <header>
             <h1>B站账号快速清理工具</h1>
@@ -96,6 +97,9 @@
                         <div class="log-header">
                             <h2>执行日志</h2>
                             <button class="btn btn-small" onclick="app.clearLog()">清空日志</button>
+                        </div>
+                        <div class="progress-bar" id="progress-bar">
+                            <div class="progress-bar-fill" id="progress-fill"></div>
                         </div>
                         <div id="log-container" class="log-container">
                             <div class="log-placeholder">准备就绪，等待指令...</div>

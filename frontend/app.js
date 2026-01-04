@@ -9,10 +9,12 @@ const app = {
             sessdata: null,
             bili_jct: null
         },
-        isProcessing: false
+        isProcessing: false,
+        theme: 'light'
     },
 
     init: function() {
+        this.initTheme();
         this.loadUserFromStorage();
         if (this.state.user.sessdata && this.state.user.mid) {
             this.showDashboard();
@@ -29,6 +31,35 @@ const app = {
         document.getElementById('logout-btn').addEventListener('click', () => {
             this.logout();
         });
+
+        // Theme toggle
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            this.toggleTheme();
+        });
+    },
+
+    // --- Theme ---
+
+    initTheme: function() {
+        const saved = localStorage.getItem('bili_cleaner_theme');
+        if (saved) {
+            this.state.theme = saved;
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            this.state.theme = 'dark';
+        }
+        this.applyTheme();
+    },
+
+    toggleTheme: function() {
+        this.state.theme = this.state.theme === 'light' ? 'dark' : 'light';
+        localStorage.setItem('bili_cleaner_theme', this.state.theme);
+        this.applyTheme();
+    },
+
+    applyTheme: function() {
+        document.documentElement.setAttribute('data-theme', this.state.theme);
+        const btn = document.getElementById('theme-toggle');
+        btn.textContent = this.state.theme === 'light' ? '🌙' : '☀️';
     },
 
     loadUserFromStorage: function() {
@@ -226,14 +257,35 @@ const app = {
 
     setProcessing: function(processing) {
         this.state.isProcessing = processing;
+        const progressBar = document.getElementById('progress-bar');
+        const progressFill = document.getElementById('progress-fill');
+
         document.querySelectorAll('button.btn-primary, button.btn-danger').forEach(btn => {
             btn.disabled = processing;
-            if (processing) {
-                btn.style.opacity = '0.7';
-            } else {
-                btn.style.opacity = '1';
-            }
         });
+
+        if (processing) {
+            progressBar.classList.add('active');
+            this.animateProgress();
+        } else {
+            progressFill.style.width = '100%';
+            setTimeout(() => {
+                progressBar.classList.remove('active');
+                progressFill.style.width = '0%';
+            }, 500);
+        }
+    },
+
+    animateProgress: function() {
+        const fill = document.getElementById('progress-fill');
+        let width = 0;
+        const animate = () => {
+            if (!this.state.isProcessing) return;
+            width = Math.min(width + Math.random() * 15, 90);
+            fill.style.width = width + '%';
+            setTimeout(animate, 300 + Math.random() * 500);
+        };
+        animate();
     },
 
     // --- Logging ---
