@@ -1,4 +1,6 @@
 const app = {
+    // 安全警告: SESSDATA 和 bili_jct 存储在 localStorage 中
+    // 生产环境建议使用 HttpOnly Cookie 或后端 session 管理
     state: {
         qrcodeKey: null,
         pollInterval: null,
@@ -175,7 +177,8 @@ const app = {
             'favorites': '确定要删除所有收藏夹内容吗？此操作不可恢复。',
             'dynamics': '确定要删除所有动态吗？此操作不可恢复。',
             'history': '确定要清空观看历史吗？',
-            'all': '警告！这将清空关注、收藏、动态和历史记录！确定要继续吗？'
+            'comments': '确定要删除所有评论吗？此操作不可恢复。',
+            'all': '警告！这将清空关注、收藏、动态、评论和历史记录！确定要继续吗？'
         };
 
         if (!confirm(confirmMsg[type])) return;
@@ -246,7 +249,16 @@ const app = {
         const time = new Date().toLocaleTimeString();
         const typeClass = type === 'success' ? 'log-success' : (type === 'error' ? 'log-error' : (type === 'info' ? 'log-info' : ''));
         
-        div.innerHTML = `<span class="log-time">[${time}]</span><span class="${typeClass}">${message}</span>`;
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'log-time';
+        timeSpan.textContent = `[${time}]`;
+
+        const msgSpan = document.createElement('span');
+        msgSpan.className = typeClass;
+        msgSpan.textContent = message;
+
+        div.appendChild(timeSpan);
+        div.appendChild(msgSpan);
         
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
