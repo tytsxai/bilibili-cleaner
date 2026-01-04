@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
 from backend.api import CommentApi, DynamicApi, FavoriteApi, HistoryApi, RelationApi
 from backend.api.client import BiliApiClient
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -87,7 +90,8 @@ class CleanerService:
 
     async def clear_history(self) -> CleanResult:
         await self._history_api.clear_history()
-        return CleanResult(0)
+        # B站 API 不返回清理数量，返回 1 表示操作已执行
+        return CleanResult(1)
 
     async def clear_all_comments(self) -> CleanResult:
         """清理用户发布的评论（通过回复历史获取）"""
@@ -113,8 +117,8 @@ class CleanerService:
                     try:
                         await self._comment_api.delete_comment(comment_type, oid, rpid)
                         total += 1
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning("Failed to delete comment oid=%s rpid=%s: %s", oid, rpid, e)
             # 获取下一页游标
             cursor = data.get("cursor") if isinstance(data, dict) else None
             if not isinstance(cursor, dict):
