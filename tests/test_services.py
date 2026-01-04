@@ -118,4 +118,4 @@ async def test_clear_history(bili_client: BiliApiClient) -> None:
         )
         result = await service.clear_history()
 
-    assert result.count == 0
+    assert result.count == 1  # 返回 1 表示操作已执行

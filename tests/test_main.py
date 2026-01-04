@@ -124,7 +124,7 @@ async def test_clean_history(async_client: httpx.AsyncClient, auth_headers: dict
     assert response.status_code == 200
     payload = response.json()
     assert payload["success"] is True
-    assert payload["count"] == 0
+    assert payload["count"] == 1  # 返回 1 表示操作已执行
 
 
 async def test_clean_all(async_client: httpx.AsyncClient, auth_headers: dict[str, str]) -> None:
@@ -172,9 +172,9 @@ async def test_clean_all(async_client: httpx.AsyncClient, auth_headers: dict[str
         "favorites": 1,
         "dynamics": 1,
         "comments": 0,
-        "history": 0,
+        "history": 1,
     }
-    assert payload["total"] == 3
+    assert payload["total"] == 4
 
 
 async def test_auth_required(async_client: httpx.AsyncClient) -> None:
