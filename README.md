@@ -50,8 +50,27 @@
 
 启动后访问 `http://localhost:8000` 即可看到 Web 界面：
 
-1. **登录页**：显示二维码，等待 App 扫码
-2. **控制台**：显示当前 UID、清理选项、执行日志
+**① 扫码登录页** — 手机 App 扫码，无需输密码
+
+**② 清理控制台**
+
+```
+┌──────────────────────────────────────────┐
+│  当前 UID: 12345678         [退出登录]   │
+├──────────────────────────────────────────┤
+│  清理关注    批量取消所有关注   [执行]   │
+│  清理收藏    批量删除收藏内容   [执行]   │
+│  清理动态    批量删除发布动态   [执行]   │
+│  清理历史    清空观看历史       [执行]   │
+│  一键清理所有                  [全部清理]│
+├──────────────────────────────────────────┤
+│  执行日志                    [清空日志]  │
+│  [15:23:12] 开始执行: all...             │
+│  [15:23:45] 全部清理完成! 总计: 342      │
+└──────────────────────────────────────────┘
+```
+
+支持浅色 / 深色主题切换，实时显示进度与结果。
 
 ---
 
@@ -59,7 +78,7 @@
 
 ### 环境要求
 
-- **Docker**（推荐）或 **Python 3.10+**
+- **Docker**（推荐，[点此下载安装 Docker Desktop](https://www.docker.com/products/docker-desktop/)）或 **Python 3.10+**
 - 浏览器（Chrome / Edge / Safari / Firefox 均可）
 - 哔哩哔哩手机 App（用于扫码登录）
 
@@ -79,6 +98,8 @@ docker compose up -d
 docker compose down
 ```
 
+> 💡 **8000 端口被占？** 编辑 `docker-compose.yml`，把 `"8000:8000"` 左边改成空闲端口，如 `"8080:8000"`，浏览器访问对应端口即可。
+
 ### 方式二：Python 本地运行
 
 ```bash
@@ -94,7 +115,7 @@ source .venv/bin/activate      # macOS / Linux
 # 3. 安装依赖
 pip install -r backend/requirements.txt
 
-# 4. 启动服务
+# 4. 启动服务（端口被占用可改 --port 8080）
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -292,6 +313,8 @@ pytest tests/ --cov=backend --cov-report=html
 ```
 
 欢迎提交 Issue 和 PR，详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+版本更新记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ---
 
