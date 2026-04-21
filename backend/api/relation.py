@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Sequence
+from typing import Any
 
 from .client import BiliApiClient
 
 FOLLOWINGS_URL = "https://api.bilibili.com/x/relation/followings"
-BATCH_MODIFY_URL = "https://api.bilibili.com/x/relation/batch/modify"
+MODIFY_URL = "https://api.bilibili.com/x/relation/modify"
 
 
 class RelationApi:
@@ -20,13 +20,10 @@ class RelationApi:
         data = payload.get("data") if isinstance(payload, dict) else None
         return data if isinstance(data, dict) else {}
 
-    async def batch_unfollow(self, mids: Sequence[int]) -> dict[str, Any]:
-        if len(mids) > 50:
-            raise ValueError("batch_unfollow supports up to 50 mids per request")
-        fids = ",".join(str(mid) for mid in mids)
+    async def unfollow(self, mid: int) -> dict[str, Any]:
         payload = await self._client.post(
-            BATCH_MODIFY_URL,
-            data={"fids": fids, "act": 2},
+            MODIFY_URL,
+            data={"fid": mid, "act": 2, "re_src": 11},
             include_csrf=True,
         )
         data = payload.get("data") if isinstance(payload, dict) else None

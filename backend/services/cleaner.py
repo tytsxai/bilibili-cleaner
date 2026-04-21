@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence
 
-from backend.api import CommentApi, DynamicApi, FavoriteApi, HistoryApi, RelationApi
+from backend.api import DynamicApi, FavoriteApi, HistoryApi, RelationApi
 from backend.api.client import BiliApiClient
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,6 @@ class CleanerService:
         self._favorite_api = FavoriteApi(client)
         self._dynamic_api = DynamicApi(client)
         self._history_api = HistoryApi(client)
-        self._comment_api = CommentApi(client)
 
     async def clear_all_followings(self, mid: int) -> CleanResult:
         total = 0
@@ -32,9 +31,12 @@ class CleanerService:
             mids = self._extract_following_mids(data)
             if not mids:
                 break
-            for batch in _chunked(mids, 50):
-                await self._relation_api.batch_unfollow(batch)
-                total += len(batch)
+            for target in mids:
+                try:
+                    await self._relation_api.unfollow(target)
+                    total += 1
+                except Exception as e:
+                    logger.warning("Failed to unfollow mid=%s: %s", target, e)
             safety += 1
             if safety > 200:
                 break
@@ -76,8 +78,11 @@ class CleanerService:
                 dynamic_id = _extract_dynamic_id(item)
                 if dynamic_id is None:
                     continue
-                await self._dynamic_api.delete_dynamic(dynamic_id)
-                total += 1
+                try:
+                    await self._dynamic_api.delete_dynamic(dynamic_id)
+                    total += 1
+                except Exception as e:
+                    logger.warning("Failed to delete dynamic id=%s: %s", dynamic_id, e)
             has_more = bool(data.get("has_more")) if isinstance(data, dict) else False
             next_offset = data.get("offset") if isinstance(data, dict) else None
             if not has_more or not next_offset or next_offset == offset:
@@ -90,48 +95,7 @@ class CleanerService:
 
     async def clear_history(self) -> CleanResult:
         await self._history_api.clear_history()
-        # B站 API 不返回清理数量，返回 1 表示操作已执行
         return CleanResult(1)
-
-    async def clear_all_comments(self) -> CleanResult:
-        """清理用户发布的评论（通过回复历史获取）"""
-        total = 0
-        cursor_id = 0
-        safety = 0
-        while True:
-            data = await self._comment_api.get_reply_history(cursor_id)
-            items = data.get("items") if isinstance(data, dict) else None
-            if not isinstance(items, list) or not items:
-                break
-            for item in items:
-                if not isinstance(item, Mapping):
-                    continue
-                # 提取评论信息
-                item_data = item.get("item") if isinstance(item, Mapping) else None
-                if not isinstance(item_data, dict):
-                    continue
-                oid = _safe_int(item_data.get("subject_id"))
-                rpid = _safe_int(item_data.get("target_reply_id"))
-                comment_type = _safe_int(item_data.get("business_id")) or 1
-                if oid and rpid:
-                    try:
-                        await self._comment_api.delete_comment(comment_type, oid, rpid)
-                        total += 1
-                    except Exception as e:
-                        logger.warning("Failed to delete comment oid=%s rpid=%s: %s", oid, rpid, e)
-            # 获取下一页游标
-            cursor = data.get("cursor") if isinstance(data, dict) else None
-            if not isinstance(cursor, dict):
-                break
-            next_id = _safe_int(cursor.get("id"))
-            is_end = cursor.get("is_end", True)
-            if is_end or not next_id or next_id == cursor_id:
-                break
-            cursor_id = next_id
-            safety += 1
-            if safety > 100:
-                break
-        return CleanResult(total)
 
     @staticmethod
     def _extract_following_mids(data: Mapping[str, Any]) -> list[int]:

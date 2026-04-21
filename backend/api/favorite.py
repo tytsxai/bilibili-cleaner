@@ -6,7 +6,7 @@ from .client import BiliApiClient
 
 FOLDERS_URL = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
 RESOURCE_IDS_URL = "https://api.bilibili.com/x/v3/fav/resource/ids"
-BATCH_DELETE_URL = "https://api.bilibili.com/x/v3/fav/resource/batch/del"
+BATCH_DELETE_URL = "https://api.bilibili.com/x/v3/fav/resource/batch-del"
 
 
 class FavoriteApi:
