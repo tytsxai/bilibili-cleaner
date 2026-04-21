@@ -8,11 +8,21 @@ import pytest
 import respx
 
 from backend.api.auth import GENERATE_QRCODE_URL, POLL_QRCODE_URL
-from backend.api.comment import DELETE_COMMENT_URL, REPLY_HISTORY_URL
 from backend.api.dynamic import DELETE_DYNAMIC_URL, DYNAMICS_URL
+from backend.api.wbi import NAV_URL
+
+NAV_PAYLOAD = {
+    "code": 0,
+    "data": {
+        "wbi_img": {
+            "img_url": "https://i0.hdslb.com/bfs/wbi/a.png",
+            "sub_url": "https://i0.hdslb.com/bfs/wbi/b.png",
+        }
+    },
+}
 from backend.api.favorite import BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL
 from backend.api.history import CLEAR_HISTORY_URL
-from backend.api.relation import BATCH_MODIFY_URL, FOLLOWINGS_URL
+from backend.api.relation import MODIFY_URL, FOLLOWINGS_URL
 
 pytestmark = pytest.mark.asyncio
 
@@ -57,7 +67,7 @@ async def test_clean_followings(async_client: httpx.AsyncClient, auth_headers: d
     ]
     with respx.mock(assert_all_called=True, assert_all_mocked=False) as router:
         router.get(FOLLOWINGS_URL).mock(side_effect=followings_responses)
-        batch_route = router.post(BATCH_MODIFY_URL).mock(
+        modify_route = router.post(MODIFY_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
         )
         response = await async_client.post("/api/clean/followings", json={"mid": 123}, headers=auth_headers)
@@ -66,8 +76,9 @@ async def test_clean_followings(async_client: httpx.AsyncClient, auth_headers: d
     payload = response.json()
     assert payload["success"] is True
     assert payload["count"] == 2
-    form = parse_form(batch_route.calls[0].request)
-    assert form["fids"] == ["1,2"]
+    assert len(modify_route.calls) == 2
+    form = parse_form(modify_route.calls[0].request)
+    assert form["fid"] == ["1"]
 
 
 async def test_clean_favorites(async_client: httpx.AsyncClient, auth_headers: dict[str, str]) -> None:
@@ -93,6 +104,7 @@ async def test_clean_favorites(async_client: httpx.AsyncClient, auth_headers: di
 
 async def test_clean_dynamics(async_client: httpx.AsyncClient, auth_headers: dict[str, str]) -> None:
     with respx.mock(assert_all_called=True, assert_all_mocked=False) as router:
+        router.get(NAV_URL).mock(return_value=httpx.Response(200, json=NAV_PAYLOAD))
         router.get(DYNAMICS_URL).mock(
             return_value=httpx.Response(
                 200,
@@ -140,7 +152,7 @@ async def test_clean_all(async_client: httpx.AsyncClient, auth_headers: dict[str
     ]
     with respx.mock(assert_all_called=True, assert_all_mocked=False) as router:
         router.get(FOLLOWINGS_URL).mock(side_effect=followings_responses)
-        router.post(BATCH_MODIFY_URL).mock(
+        router.post(MODIFY_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
         )
         router.get(FOLDERS_URL).mock(
@@ -152,15 +164,13 @@ async def test_clean_all(async_client: httpx.AsyncClient, auth_headers: dict[str
         router.post(BATCH_DELETE_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"success": True}})
         )
+        router.get(NAV_URL).mock(return_value=httpx.Response(200, json=NAV_PAYLOAD))
         router.get(DYNAMICS_URL).mock(side_effect=dynamics_responses)
         router.post(DELETE_DYNAMIC_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
         )
         router.post(CLEAR_HISTORY_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
-        )
-        router.get(REPLY_HISTORY_URL).mock(
-            return_value=httpx.Response(200, json={"code": 0, "data": {"items": [], "cursor": {"is_end": True}}})
         )
         response = await async_client.post("/api/clean/all", json={"mid": 100}, headers=auth_headers)
 
@@ -171,7 +181,6 @@ async def test_clean_all(async_client: httpx.AsyncClient, auth_headers: dict[str
         "followings": 1,
         "favorites": 1,
         "dynamics": 1,
-        "comments": 0,
         "history": 1,
     }
     assert payload["total"] == 4

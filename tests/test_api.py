@@ -8,11 +8,11 @@ import respx
 
 from backend.api.auth import AuthApi, GENERATE_QRCODE_URL, POLL_QRCODE_URL
 from backend.api.client import BiliApiClient, BiliApiError
-from backend.api.comment import CommentApi, DELETE_COMMENT_URL
 from backend.api.dynamic import DynamicApi, DELETE_DYNAMIC_URL, DYNAMICS_URL
+from backend.api.wbi import NAV_URL
 from backend.api.favorite import FavoriteApi, BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL
 from backend.api.history import HistoryApi, CLEAR_HISTORY_URL
-from backend.api.relation import RelationApi, BATCH_MODIFY_URL, FOLLOWINGS_URL
+from backend.api.relation import RelationApi, MODIFY_URL, FOLLOWINGS_URL
 
 pytestmark = pytest.mark.asyncio
 
@@ -131,23 +131,18 @@ async def test_relation_get_followings(api_client: BiliApiClient) -> None:
         assert params["vmid"] == "123"
 
 
-async def test_relation_batch_unfollow(api_client: BiliApiClient) -> None:
+async def test_relation_unfollow(api_client: BiliApiClient) -> None:
     api = RelationApi(api_client)
     with respx.mock(assert_all_called=True) as router:
-        route = router.post(BATCH_MODIFY_URL).mock(
+        route = router.post(MODIFY_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
         )
-        data = await api.batch_unfollow([1, 2])
+        data = await api.unfollow(42)
         assert data["ok"] is True
         form = parse_form(route.calls[0].request)
-        assert form["fids"] == ["1,2"]
+        assert form["fid"] == ["42"]
         assert form["act"] == ["2"]
-
-
-async def test_relation_batch_unfollow_limit(api_client: BiliApiClient) -> None:
-    api = RelationApi(api_client)
-    with pytest.raises(ValueError):
-        await api.batch_unfollow(list(range(51)))
+        assert form["csrf"] == [CSRF_TOKEN]
 
 
 async def test_favorite_get_folders(api_client: BiliApiClient) -> None:
@@ -184,9 +179,21 @@ async def test_favorite_batch_delete(api_client: BiliApiClient) -> None:
         assert form["media_id"] == ["789"]
 
 
+NAV_PAYLOAD = {
+    "code": 0,
+    "data": {
+        "wbi_img": {
+            "img_url": "https://i0.hdslb.com/bfs/wbi/7cd084941338484aae1ad9425b84077c.png",
+            "sub_url": "https://i0.hdslb.com/bfs/wbi/4932caff0ff746eab6f01bf08b70ac45.png",
+        }
+    },
+}
+
+
 async def test_dynamic_get_dynamics(api_client: BiliApiClient) -> None:
     api = DynamicApi(api_client)
     with respx.mock(assert_all_called=True) as router:
+        router.get(NAV_URL).mock(return_value=httpx.Response(200, json=NAV_PAYLOAD))
         route = router.get(DYNAMICS_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"items": []}})
         )
@@ -194,6 +201,12 @@ async def test_dynamic_get_dynamics(api_client: BiliApiClient) -> None:
         assert data["items"] == []
         params = route.calls[0].request.url.params
         assert params["host_mid"] == "321"
+        assert params["offset"] == "offset"
+        assert params["platform"] == "web"
+        assert "w_rid" in params
+        assert "wts" in params
+        request = route.calls[0].request
+        assert "space.bilibili.com" in request.headers.get("referer", "")
 
 
 async def test_dynamic_delete_dynamic(api_client: BiliApiClient) -> None:
@@ -206,20 +219,6 @@ async def test_dynamic_delete_dynamic(api_client: BiliApiClient) -> None:
         assert data["ok"] is True
         form = parse_form(route.calls[0].request)
         assert form["dynamic_id"] == ["555"]
-
-
-async def test_comment_delete_comment(api_client: BiliApiClient) -> None:
-    api = CommentApi(api_client)
-    with respx.mock(assert_all_called=True) as router:
-        route = router.post(DELETE_COMMENT_URL).mock(
-            return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
-        )
-        data = await api.delete_comment(1, 999, 888)
-        assert data["ok"] is True
-        form = parse_form(route.calls[0].request)
-        assert form["type"] == ["1"]
-        assert form["oid"] == ["999"]
-        assert form["rpid"] == ["888"]
 
 
 async def test_history_clear_history(api_client: BiliApiClient) -> None:
