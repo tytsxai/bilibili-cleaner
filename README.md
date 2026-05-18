@@ -6,6 +6,9 @@
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](tests/)
+[![Release](https://img.shields.io/github/v/release/tytsxai/bilibili-cleaner)](https://github.com/tytsxai/bilibili-cleaner/releases)
+
+[English](README.en.md) · [llms.txt](llms.txt) · [Changelog](CHANGELOG.md) · [Issues](https://github.com/tytsxai/bilibili-cleaner/issues)
 
 **Bilibili Cleaner** 是一个开源的 B 站（哔哩哔哩）账号快速清理工具，提供简洁的网页界面，帮你**一键批量取消关注、清空收藏夹、删除所有动态、清空观看历史**。适合账号注销前清理数据、小号整理、隐私数据清除等场景。
 
@@ -19,6 +22,8 @@
   - [方式一：Docker 一键启动（推荐小白）](#方式一docker-一键启动推荐小白)
   - [方式二：Python 本地运行](#方式二python-本地运行)
 - [使用教程（图文步骤）](#-使用教程图文步骤)
+- [适合谁用 / 使用场景](#-适合谁用--使用场景)
+- [与其它清理方案对比](#-与其它清理方案对比)
 - [常见问题 FAQ](#-常见问题-faq)
 - [安全说明](#-安全说明)
 - [功能范围与已知限制](#-功能范围与已知限制)
@@ -165,6 +170,28 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000
 右上角"退出登录"清除本地保存的登录凭证。
 
 ---
+
+## 🎯 适合谁用 / 使用场景
+
+| 场景 | 怎么用 |
+|------|--------|
+| **B 站账号注销前清理** | 一键清掉关注/收藏/动态/历史,确保注销后无残留 |
+| **小号整理** | 几年攒下来的 5000+ 关注、几百条动态,手动删根本删不完 |
+| **账号转手** | 把账号给家人/朋友/二手交易前,先清空个人痕迹 |
+| **隐私清洁** | 定期把观看历史 / 收藏夹清空,降低个性化推荐对生活的影响 |
+| **批量取关 KOL** | 不想再看到某类内容,先批量取关,再重新只关注少数账号 |
+| **自部署洁癖** | 不放心第三方"清理小程序",自己跑 Docker 一键启动 |
+
+## 🔄 与其它清理方案对比
+
+| 方案 | 是否本地运行 | 是否需要密码 | 支持动态 opus(图文) | 是否开源 |
+|------|------------|------------|-------------------|--------|
+| **Bilibili Cleaner(本项目)** | ✅ Docker / Python | ❌ 扫码 | ✅ WBI 签名拉取 | ✅ MIT |
+| 油猴 / Tampermonkey 脚本 | ✅ 浏览器 | ❌ 复用 cookie | 部分 | 视脚本而定 |
+| 第三方"清理小程序" | ❌ 走第三方服务 | ✅ 或 cookie 上传 | 通常不支持 | ❌ 闭源 |
+| 手动删除 | ✅ | — | ✅ | — |
+
+**结论**:本项目优势在于「**全本地 + 扫码登录 + 开源可审计 + 兼容新版图文动态**」,适合不愿把 cookie 交给第三方的用户。
 
 ## ❓ 常见问题 FAQ
 

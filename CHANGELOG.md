@@ -2,6 +2,17 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/) 规范，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.1.1] - 2026-05-19
+
+### 文档
+- **新增英文 README** (`README.en.md`)：面向 GitHub 国际用户的完整英文版，含 Quick Start / FAQ / API 接口说明
+- **新增 `llms.txt`**：为 ChatGPT / Claude / Perplexity / Gemini 等 AI 搜索引擎提供精炼项目索引
+- **新增「适合谁用 / 使用场景」章节**：覆盖账号注销前清理、小号整理、账号转手、隐私清洁等场景
+- **新增「与其它清理方案对比」表**：对比油猴脚本 / 第三方清理小程序 / 手动删除四种方案
+- **README 顶部新增 Release / 英文 / llms.txt / Changelog 导航链接**
+
+无代码改动，API 与运行行为与 1.1.0 完全一致。
+
 ## [1.1.0] - 2026-04-21
 
 ### 新增
@@ -32,5 +43,6 @@
 - Docker Compose 一键部署
 - 单元测试（95%+ 覆盖率）
 
+[1.1.1]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/tytsxai/bilibili-cleaner/releases/tag/v1.0.0

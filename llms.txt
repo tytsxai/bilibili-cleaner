@@ -1,0 +1,44 @@
+# Bilibili Cleaner / B站账号一键清理工具
+
+> Open-source self-hosted web tool to bulk-clean a Bilibili (B 站 / 哔哩哔哩) account: unfollow everyone, empty all favorite folders, delete every dynamic (post), and wipe watch history. QR-code login on your own machine, FastAPI backend + plain HTML/JS frontend, runs in Docker or Python locally.
+
+Designed for people who are about to delete a Bilibili account, declutter a side account, or quickly wipe their footprint before handing the account to someone else. All API calls go from your own machine to bilibili.com — no third-party server, credentials stay in your browser's localStorage.
+
+## Key docs
+
+- [README.md](README.md): Full Chinese-primary README (功能特性 / 快速开始 / 图文教程 / FAQ / 安全说明 / 项目结构 / API 接口).
+- [README.en.md](README.en.md): English summary (what it does, quick start, FAQ).
+- [CHANGELOG.md](CHANGELOG.md): Version history (1.0.0 → current).
+- [CONTRIBUTING.md](CONTRIBUTING.md): How to contribute.
+
+## What this tool does
+
+- 扫码登录 / QR-code login via Bilibili mobile app (no password)
+- 批量取关 / Bulk unfollow every UP 主 (`/x/relation/modify`)
+- 清空收藏 / Empty every favorite folder (`/x/v3/fav/resource/batch-del`)
+- 删除全部动态 / Delete every dynamic including new opus 图文 (WBI-signed fetch + `rm_dynamic`)
+- 清空观看历史 / Wipe watch history (`/x/v2/history/clear`)
+- 一键全部清理 / One-click full wipe
+- 实时执行日志、深色/浅色主题、Web UI
+
+## What this tool does NOT do
+
+- ❌ Delete comments you posted (B 站 has no public "list my comments" API; not reliably possible)
+- ❌ Touch private messages / fans / 追番 / 稍后再看
+- ❌ Operate other people's accounts — only the account that scanned the QR code
+- ❌ Send your data anywhere — all requests are direct your-machine → bilibili.com
+
+## Common questions
+
+- **Is it safe?** Yes. Credentials live only in your browser localStorage; no third-party server; code is open-source and auditable; clear "退出登录" button wipes credentials.
+- **Will my account get banned?** Unlikely — it calls the same Web APIs the official site uses. Heavy rapid use may trigger temporary rate-limit (风控), not a ban. Throttled at ~1–3 requests/sec.
+- **Why does delete-comments not exist?** Bilibili does not expose an API to list comments you posted — only "comments on your stuff." Removed from v1.1.0 to avoid misleading users.
+- **Windows / Mac / Linux?** All three. Docker Desktop is the simplest path; Python 3.10+ works too.
+- **Can I recover after cleaning?** No. All operations are permanent. There is no undo.
+
+## Repository
+
+- GitHub: https://github.com/tytsxai/bilibili-cleaner
+- License: MIT
+- Stack: FastAPI (Python 3.10+) + HTML/CSS/JS, Docker Compose
+- Author: tytsxai
