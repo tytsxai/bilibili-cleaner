@@ -49,3 +49,28 @@ def sign_params(params: Mapping[str, Any], img_key: str, sub_key: str) -> dict[s
     query = urllib.parse.urlencode(items, doseq=True)
     signed["w_rid"] = hashlib.md5((query + mixin).encode("utf-8")).hexdigest()
     return signed
+
+
+async def signed_get(
+    client: BiliApiClient,
+    url: str,
+    params: Mapping[str, Any],
+    *,
+    headers: Mapping[str, str] | None = None,
+) -> dict[str, Any]:
+    """GET ``url`` with WBI signature using ``client``'s cached keys.
+
+    If the request fails with a WBI-related error code we refresh the keys
+    once and retry. Other errors propagate.
+    """
+    img_key, sub_key = await client.get_wbi_keys()
+    signed = sign_params(params, img_key, sub_key)
+    try:
+        return await client.get(url, params=signed, headers=headers)
+    except BiliApiError as exc:
+        if exc.code not in {-101, -111, -403}:
+            raise
+        client.invalidate_wbi_keys()
+        img_key, sub_key = await client.get_wbi_keys()
+        signed = sign_params(params, img_key, sub_key)
+        return await client.get(url, params=signed, headers=headers)

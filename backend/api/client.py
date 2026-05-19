@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Mapping
 
 import httpx
@@ -34,6 +35,9 @@ class BiliApiClient:
         user_agent: str | None = None,
         referer: str | None = None,
         timeout: float | httpx.Timeout = 10.0,
+        qps: float | None = None,
+        max_retries: int = 3,
+        retry_base_delay: float = 1.0,
     ) -> None:
         headers = {
             "User-Agent": user_agent or DEFAULT_USER_AGENT,
@@ -45,6 +49,30 @@ class BiliApiClient:
         if bili_jct:
             cookies["bili_jct"] = bili_jct
         self._client = httpx.AsyncClient(headers=headers, cookies=cookies, timeout=timeout)
+        self._limiter = None
+        if qps is not None:
+            from .ratelimit import AsyncTokenBucket
+
+            self._limiter = AsyncTokenBucket(qps)
+        if max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
+        self._max_retries = max_retries
+        self._retry_base_delay = retry_base_delay
+        self._wbi_keys: tuple[str, str] | None = None
+        self._wbi_lock = asyncio.Lock()
+
+    async def get_wbi_keys(self) -> tuple[str, str]:
+        if self._wbi_keys is not None:
+            return self._wbi_keys
+        async with self._wbi_lock:
+            if self._wbi_keys is None:
+                from .wbi import fetch_wbi_keys
+
+                self._wbi_keys = await fetch_wbi_keys(self)
+            return self._wbi_keys
+
+    def invalidate_wbi_keys(self) -> None:
+        self._wbi_keys = None
 
     async def __aenter__(self) -> "BiliApiClient":
         return self
@@ -80,6 +108,34 @@ class BiliApiClient:
         data: Mapping[str, Any] | None = None,
         json: Any | None = None,
         headers: Mapping[str, str] | None = None,
+    ) -> dict[str, Any]:
+        from .retry import is_risk_control_error, sleep_backoff
+
+        last_exc: BiliApiError | None = None
+        for attempt in range(self._max_retries + 1):
+            if self._limiter is not None:
+                await self._limiter.acquire()
+            try:
+                return await self._request_once(
+                    method, url, params=params, data=data, json=json, headers=headers
+                )
+            except BiliApiError as exc:
+                if attempt >= self._max_retries or not is_risk_control_error(exc):
+                    raise
+                last_exc = exc
+                await sleep_backoff(attempt, self._retry_base_delay)
+        assert last_exc is not None
+        raise last_exc
+
+    async def _request_once(
+        self,
+        method: str,
+        url: str,
+        *,
+        params: Mapping[str, Any] | None,
+        data: Mapping[str, Any] | None,
+        json: Any | None,
+        headers: Mapping[str, str] | None,
     ) -> dict[str, Any]:
         try:
             response = await self._client.request(
