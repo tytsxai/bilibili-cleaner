@@ -1,0 +1,302 @@
+# Bilibili Cleaner — HTTP API & CLI reference
+
+Companion to [`AGENTS.md`](../AGENTS.md). All examples assume the server
+is running at `http://localhost:8000` (`uvicorn backend.main:app`).
+
+## Conventions
+
+- All v2 endpoints are under `/api/v2/`. Earlier `/api/clean/*` paths are
+  kept as v1 aliases (same behaviour).
+- Write requests require headers `SESSDATA` and `bili_jct`. JSON bodies
+  for endpoints that take one. The CLI does the same via local credential
+  store.
+- Response envelope on error:
+  `{"error": "...", "code": <int|null>, "data": <any|null>}`.
+- Rate limit: default 1.5 req/s shared across the client. Auto-retry on
+  risk-control codes (`-352`, `-799`, `-509`, HTTP 412/429) with
+  exponential backoff (max 3 attempts).
+- For listings the response shape mirrors B 站's `data` field unless an
+  explicit pydantic model documents otherwise — open `/docs` (Swagger)
+  or [`openapi.json`](../openapi.json) for the exact shape.
+
+## Auth flow
+
+```bash
+# 1. server side
+curl http://localhost:8000/api/qrcode               # → {qrcode_key, image (base64 PNG)}
+curl http://localhost:8000/api/qrcode/poll/$KEY     # poll until code==0 → SESSDATA / bili_jct in url
+
+# 2. CLI side
+bilibili-cleaner auth login                         # interactive QR; saves credentials
+bilibili-cleaner me                                 # verify
+```
+
+Credentials persist at `~/.bilibili-cleaner/credentials.json` (override
+with `$BILI_CREDENTIALS_PATH`) or via `$BILI_SESSDATA` + `$BILI_JCT` env
+vars.
+
+## Endpoint reference
+
+> Authoritative schemas live in [`/openapi.json`](../openapi.json). Below
+> are quick curl recipes.
+
+### Identity
+
+```bash
+curl -H "SESSDATA: $S" -H "bili_jct: $J" \
+  http://localhost:8000/api/v2/me
+# → {"isLogin": true, "mid": 12345, "uname": "tester", "raw": {…}}
+```
+
+### Users (any UP)
+
+```bash
+curl -H "$AUTH" http://localhost:8000/api/v2/users/12345
+curl -H "$AUTH" http://localhost:8000/api/v2/users/12345/stat
+curl -H "$AUTH" 'http://localhost:8000/api/v2/users/12345/videos?page=1&page_size=1&order=pubdate'
+```
+
+`videos` returns `data.list.vlist[].pubdate` — use page_size=1 to cheaply
+check "last upload time" for an activity filter.
+
+### Followings
+
+```bash
+# list one page (basic)
+curl -H "$AUTH" \
+  'http://localhost:8000/api/v2/followings?mid=12345&page=1&page_size=50'
+
+# list with enrichment (profile + stat + latest video)
+curl -H "$AUTH" \
+  'http://localhost:8000/api/v2/followings?mid=12345&with_detail=true&concurrency=3'
+
+# inspect one UP
+curl -H "$AUTH" http://localhost:8000/api/v2/followings/9999
+
+# selective unfollow (sync; OK for small batches)
+curl -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"mids":[101,102,103]}' \
+  http://localhost:8000/api/v2/followings/unfollow
+
+# selective unfollow (async; recommended >50 mids)
+curl -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"mids":[…]}' \
+  http://localhost:8000/api/v2/followings/unfollow-task
+# → {"task_id": "abc…"}
+
+# clear ALL (async)
+curl -X POST -H "$AUTH" \
+  'http://localhost:8000/api/v2/followings/clear?mid=12345'
+```
+
+### Favorites
+
+```bash
+curl -H "$AUTH" 'http://localhost:8000/api/v2/favorites/folders?mid=12345'
+curl -H "$AUTH" 'http://localhost:8000/api/v2/favorites/folders/9876/items?page=1'
+curl -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"resources":[{"id":111,"type":2},{"id":222,"type":2}]}' \
+  http://localhost:8000/api/v2/favorites/folders/9876/delete
+curl -X POST -H "$AUTH" 'http://localhost:8000/api/v2/favorites/clear?mid=12345'
+```
+
+### Dynamics
+
+```bash
+curl -H "$AUTH" 'http://localhost:8000/api/v2/dynamics?mid=12345'
+curl -H "$AUTH" 'http://localhost:8000/api/v2/dynamics?mid=12345&offset=<from-prev>'
+curl -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"ids":["100","101"]}' \
+  http://localhost:8000/api/v2/dynamics/delete
+curl -X POST -H "$AUTH" 'http://localhost:8000/api/v2/dynamics/clear?mid=12345'
+```
+
+### History
+
+```bash
+curl -H "$AUTH" 'http://localhost:8000/api/v2/history?max_id=0&page_size=20'
+curl -X POST -H "$AUTH" \
+  'http://localhost:8000/api/v2/history/delete?kid=archive_12345'
+curl -X POST -H "$AUTH" http://localhost:8000/api/v2/history/clear
+```
+
+### Relation tags (following groups)
+
+```bash
+curl -H "$AUTH" http://localhost:8000/api/v2/relation/tags
+curl -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"name":"to-review"}' \
+  http://localhost:8000/api/v2/relation/tags
+curl -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"mids":[1,2,3],"tag_name":"to-review"}' \
+  http://localhost:8000/api/v2/relation/tags/members
+curl -H "$AUTH" 'http://localhost:8000/api/v2/relation/tags/5/users?page=1'
+curl -X DELETE -H "$AUTH" http://localhost:8000/api/v2/relation/tags/5
+```
+
+### Tasks
+
+```bash
+curl -H "$AUTH" http://localhost:8000/api/v2/tasks
+curl -H "$AUTH" http://localhost:8000/api/v2/tasks/<task_id>
+curl -X DELETE -H "$AUTH" http://localhost:8000/api/v2/tasks/<task_id>
+curl -X POST -H "$AUTH" \
+  'http://localhost:8000/api/v2/tasks/clean-all?mid=12345'
+```
+
+Task state shape:
+```json
+{
+  "task_id": "abc…",
+  "kind": "followings.unfollow",
+  "status": "running",
+  "processed": 73,
+  "total": 1600,
+  "errors": [{"mid": 999, "type": "BiliApiError", "message": "…"}],
+  "result": null,
+  "started_at": 1715000000.0,
+  "finished_at": null
+}
+```
+
+## Cookbooks
+
+### Cookbook 1 — Unfollow UPs inactive for 6+ months with under 1000 followers
+
+```bash
+# 1. get my mid
+MID=$(curl -s -H "$AUTH" http://localhost:8000/api/v2/me | jq -r '.mid')
+
+# 2. dump all followings (no detail) to local
+curl -s -H "$AUTH" \
+  "http://localhost:8000/api/v2/followings?mid=$MID&page=1&page_size=50&with_detail=false" \
+  | jq '.items[] | {mid, uname}' > all-followings.json
+# (loop pages until items length < page_size)
+
+# 3. for each mid: cheap "last upload" + follower count
+for m in $(jq -r '.[].mid' all-followings.json); do
+  STAT=$(curl -s -H "$AUTH" "http://localhost:8000/api/v2/users/$m/stat")
+  VID=$(curl -s -H "$AUTH" "http://localhost:8000/api/v2/users/$m/videos?page=1&page_size=1")
+  echo "$m $(jq -r '.follower' <<<"$STAT") $(jq -r '.list.vlist[0].pubdate // 0' <<<"$VID")"
+done > scored.txt
+
+# 4. filter locally (here: <1000 followers and last upload before Nov 2024)
+CUTOFF=$(date -d '6 months ago' +%s)
+awk -v cutoff="$CUTOFF" '$2 < 1000 && $3 < cutoff {print $1}' scored.txt > to-unfollow.txt
+
+# 5. start async unfollow task
+MIDS=$(jq -R . to-unfollow.txt | jq -sc 'map(tonumber)')
+TASK=$(curl -s -H "$AUTH" -H 'Content-Type: application/json' \
+  -d "{\"mids\": $MIDS}" \
+  http://localhost:8000/api/v2/followings/unfollow-task | jq -r .task_id)
+
+# 6. poll
+while :; do
+  S=$(curl -s -H "$AUTH" "http://localhost:8000/api/v2/tasks/$TASK")
+  jq -r '"\(.status) \(.processed)/\(.total)"' <<<"$S"
+  [ "$(jq -r .status <<<"$S")" = "running" ] || break
+  sleep 5
+done
+```
+
+CLI equivalent (no jq required):
+
+```bash
+bilibili-cleaner followings all --json > all.json
+bilibili-cleaner users stat 12345 # … etc, score externally
+bilibili-cleaner followings unfollow $(cat to-unfollow.txt | tr '\n' ' ')
+```
+
+### Cookbook 2 — Audit one favorites folder and delete videos shorter than 60s
+
+```bash
+# 1. find the folder id
+curl -s -H "$AUTH" "http://localhost:8000/api/v2/favorites/folders?mid=$MID" \
+  | jq '.[] | {id, title}'
+
+# 2. page through items collecting short ones
+PAGE=1
+> short.txt
+while :; do
+  DATA=$(curl -s -H "$AUTH" \
+    "http://localhost:8000/api/v2/favorites/folders/9876/items?page=$PAGE&page_size=20")
+  echo "$DATA" | jq -r '.medias[] | select(.duration < 60) | "\(.id) \(.type)"' >> short.txt
+  COUNT=$(echo "$DATA" | jq '.medias | length')
+  [ "$COUNT" -lt 20 ] && break
+  PAGE=$((PAGE+1))
+done
+
+# 3. batch delete
+RES=$(awk '{print "{\"id\":"$1",\"type\":"$2"}"}' short.txt | jq -sc .)
+curl -X POST -H "$AUTH" -H 'Content-Type: application/json' \
+  -d "{\"resources\": $RES}" \
+  http://localhost:8000/api/v2/favorites/folders/9876/delete
+```
+
+### Cookbook 3 — Two-phase safe unfollow with a "review" tag
+
+```bash
+# Phase 1: tag candidates
+curl -s -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"mids":[1,2,3,4,5],"tag_name":"to-review"}' \
+  http://localhost:8000/api/v2/relation/tags/members
+# user audits via the B 站 app: 关注 → 分组 → to-review
+
+# Phase 2: after manual confirmation, unfollow
+TAG_ID=$(curl -s -H "$AUTH" http://localhost:8000/api/v2/relation/tags \
+  | jq -r '.[] | select(.name=="to-review") | .tagid')
+MIDS=$(curl -s -H "$AUTH" \
+  "http://localhost:8000/api/v2/relation/tags/$TAG_ID/users?page=1&page_size=50" \
+  | jq -c '[.[].mid]')
+curl -X POST -H "$AUTH" -H 'Content-Type: application/json' \
+  -d "{\"mids\": $MIDS}" \
+  http://localhost:8000/api/v2/followings/unfollow-task
+```
+
+## CLI reference (one-liners)
+
+```bash
+bilibili-cleaner auth login                         # QR code → save credentials
+bilibili-cleaner auth logout                        # forget credentials
+bilibili-cleaner me                                 # GET /api/v2/me
+
+bilibili-cleaner users info <mid>
+bilibili-cleaner users stat <mid>
+bilibili-cleaner users videos <mid> --page-size 1
+
+bilibili-cleaner followings list [--with-detail]
+bilibili-cleaner followings all                     # stream all pages → JSON array
+bilibili-cleaner followings detail <mid>
+bilibili-cleaner followings unfollow <mid> ...
+bilibili-cleaner followings clear --yes
+
+bilibili-cleaner favorites folders
+bilibili-cleaner favorites items <media_id>
+bilibili-cleaner favorites delete <media_id> <aid> <aid> ...
+bilibili-cleaner favorites clear --yes
+
+bilibili-cleaner dynamics list
+bilibili-cleaner dynamics delete <id> <id> ...
+bilibili-cleaner dynamics clear --yes
+
+bilibili-cleaner history list
+bilibili-cleaner history delete <kid>
+bilibili-cleaner history clear --yes
+
+bilibili-cleaner tag list
+bilibili-cleaner tag create <name>
+bilibili-cleaner tag add-users <mid> ... --tag-name to-review
+bilibili-cleaner tag list-users <tagid>
+bilibili-cleaner tag delete <tagid>
+```
+
+All commands accept `--json` (default) or `--pretty`.
+
+## OpenAPI / Swagger
+
+Live, interactive docs at `http://localhost:8000/docs`. A committed
+snapshot lives at [`openapi.json`](../openapi.json); regenerate with:
+
+```bash
+python scripts/dump_openapi.py
+```

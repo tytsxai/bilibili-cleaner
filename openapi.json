@@ -1,0 +1,3305 @@
+{
+  "components": {
+    "schemas": {
+      "BatchActionResult": {
+        "properties": {
+          "errors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "integer"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "BatchActionResult",
+        "type": "object"
+      },
+      "DeleteDynamicsRequest": {
+        "properties": {
+          "ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "DeleteDynamicsRequest",
+        "type": "object"
+      },
+      "DeleteFavoritesRequest": {
+        "properties": {
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceRef"
+            },
+            "minItems": 1,
+            "title": "Resources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "resources"
+        ],
+        "title": "DeleteFavoritesRequest",
+        "type": "object"
+      },
+      "FollowingDetail": {
+        "properties": {
+          "info": {
+            "additionalProperties": true,
+            "title": "Info",
+            "type": "object"
+          },
+          "latest_video": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Video"
+          },
+          "mid": {
+            "title": "Mid",
+            "type": "integer"
+          },
+          "stat": {
+            "additionalProperties": true,
+            "title": "Stat",
+            "type": "object"
+          },
+          "video_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Count"
+          }
+        },
+        "required": [
+          "mid",
+          "info",
+          "stat"
+        ],
+        "title": "FollowingDetail",
+        "type": "object"
+      },
+      "FollowingListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "page",
+          "page_size",
+          "items"
+        ],
+        "title": "FollowingListResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "MidRequest": {
+        "properties": {
+          "mid": {
+            "minimum": 1.0,
+            "title": "Mid",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mid"
+        ],
+        "title": "MidRequest",
+        "type": "object"
+      },
+      "ResourceRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "type": {
+            "default": 2,
+            "title": "Type",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "ResourceRef",
+        "type": "object"
+      },
+      "SelfInfo": {
+        "properties": {
+          "isLogin": {
+            "default": false,
+            "title": "Islogin",
+            "type": "boolean"
+          },
+          "mid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mid"
+          },
+          "raw": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Full B 站 nav payload",
+            "title": "Raw"
+          },
+          "uname": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uname"
+          }
+        },
+        "title": "SelfInfo",
+        "type": "object"
+      },
+      "TagCreateRequest": {
+        "properties": {
+          "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TagCreateRequest",
+        "type": "object"
+      },
+      "TagUpdateRequest": {
+        "properties": {
+          "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TagUpdateRequest",
+        "type": "object"
+      },
+      "TagUsersRequest": {
+        "properties": {
+          "mids": {
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 1,
+            "title": "Mids",
+            "type": "array"
+          },
+          "replace": {
+            "default": false,
+            "title": "Replace",
+            "type": "boolean"
+          },
+          "tag_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tag Name"
+          },
+          "tagid": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tagid"
+          }
+        },
+        "required": [
+          "mids"
+        ],
+        "title": "TagUsersRequest",
+        "type": "object"
+      },
+      "TaskAck": {
+        "properties": {
+          "status": {
+            "default": "pending",
+            "title": "Status",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task_id"
+        ],
+        "title": "TaskAck",
+        "type": "object"
+      },
+      "TaskInfo": {
+        "properties": {
+          "errors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "processed": {
+            "default": 0,
+            "title": "Processed",
+            "type": "integer"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "description": "pending | running | completed | failed | cancelled",
+            "title": "Status",
+            "type": "string"
+          },
+          "task_id": {
+            "title": "Task Id",
+            "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "task_id",
+          "kind",
+          "status"
+        ],
+        "title": "TaskInfo",
+        "type": "object"
+      },
+      "UnfollowRequest": {
+        "properties": {
+          "mids": {
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 1,
+            "title": "Mids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mids"
+        ],
+        "title": "UnfollowRequest",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Self-hosted toolkit for inspecting and cleaning a Bilibili account.\n\nAll write operations are rate-limited (default 1.5 r/s) and retry automatically on -352 / 412 risk-control responses. Long-running cleans are exposed as async tasks under `/api/v2/tasks/*`.\n\nEndpoints under `/api/v2/*` are the canonical AI-facing surface; `/api/clean/*` (v1) are preserved aliases.",
+    "title": "Bilibili Cleaner",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/clean/all": {
+      "post": {
+        "operationId": "clean_all_api_clean_all_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MidRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Clean All Api Clean All Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clean All",
+        "tags": [
+          "v1"
+        ]
+      }
+    },
+    "/api/clean/dynamics": {
+      "post": {
+        "operationId": "clean_dynamics_api_clean_dynamics_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MidRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Clean Dynamics Api Clean Dynamics Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clean Dynamics",
+        "tags": [
+          "v1"
+        ]
+      }
+    },
+    "/api/clean/favorites": {
+      "post": {
+        "operationId": "clean_favorites_api_clean_favorites_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MidRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Clean Favorites Api Clean Favorites Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clean Favorites",
+        "tags": [
+          "v1"
+        ]
+      }
+    },
+    "/api/clean/followings": {
+      "post": {
+        "operationId": "clean_followings_api_clean_followings_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MidRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Clean Followings Api Clean Followings Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clean Followings",
+        "tags": [
+          "v1"
+        ]
+      }
+    },
+    "/api/clean/history": {
+      "post": {
+        "operationId": "clean_history_api_clean_history_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Clean History Api Clean History Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clean History",
+        "tags": [
+          "v1"
+        ]
+      }
+    },
+    "/api/qrcode": {
+      "get": {
+        "operationId": "get_qrcode_api_qrcode_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Qrcode Api Qrcode Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Qrcode",
+        "tags": [
+          "v1"
+        ]
+      }
+    },
+    "/api/qrcode/poll/{qrcode_key}": {
+      "get": {
+        "operationId": "poll_qrcode_api_qrcode_poll__qrcode_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "qrcode_key",
+            "required": true,
+            "schema": {
+              "title": "Qrcode Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Poll Qrcode Api Qrcode Poll  Qrcode Key  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Poll Qrcode",
+        "tags": [
+          "v1"
+        ]
+      }
+    },
+    "/api/v2/dynamics": {
+      "get": {
+        "description": "Returned shape: ``{items: [...], has_more, offset}``. WBI-signed under\nthe hood. Pass back ``offset`` to fetch the next page until ``has_more=false``.",
+        "operationId": "list_dynamics_api_v2_dynamics_get",
+        "parameters": [
+          {
+            "description": "host_mid",
+            "in": "query",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "description": "host_mid",
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor from previous response.offset",
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": "",
+              "description": "Cursor from previous response.offset",
+              "title": "Offset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Dynamics Api V2 Dynamics Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List a user's dynamics (one page, cursor-paginated)",
+        "tags": [
+          "dynamics"
+        ]
+      }
+    },
+    "/api/v2/dynamics/clear": {
+      "post": {
+        "operationId": "clear_dynamics_task_api_v2_dynamics_clear_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete every dynamic (async task)",
+        "tags": [
+          "dynamics"
+        ]
+      }
+    },
+    "/api/v2/dynamics/delete": {
+      "post": {
+        "operationId": "delete_dynamics_api_v2_dynamics_delete_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteDynamicsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchActionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete a specific set of dynamic IDs",
+        "tags": [
+          "dynamics"
+        ]
+      }
+    },
+    "/api/v2/favorites/clear": {
+      "post": {
+        "operationId": "clear_favorites_task_api_v2_favorites_clear_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Empty every favorite folder (async task)",
+        "tags": [
+          "favorites"
+        ]
+      }
+    },
+    "/api/v2/favorites/folders": {
+      "get": {
+        "operationId": "list_folders_api_v2_favorites_folders_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Folders Api V2 Favorites Folders Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List all favorite folders for the given mid",
+        "tags": [
+          "favorites"
+        ]
+      }
+    },
+    "/api/v2/favorites/folders/{media_id}/delete": {
+      "post": {
+        "operationId": "delete_folder_items_api_v2_favorites_folders__media_id__delete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Media Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteFavoritesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchActionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete specific items from a folder",
+        "tags": [
+          "favorites"
+        ]
+      }
+    },
+    "/api/v2/favorites/folders/{media_id}/items": {
+      "get": {
+        "description": "Returns ``{info: <folder>, medias: [{id, type, title, bvid, upper, ...}]}``.",
+        "operationId": "list_folder_items_api_v2_favorites_folders__media_id__items_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Media Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 40,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "keyword",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Keyword",
+              "type": "string"
+            }
+          },
+          {
+            "description": "mtime | view | pubtime",
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "default": "mtime",
+              "description": "mtime | view | pubtime",
+              "title": "Order",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Folder Items Api V2 Favorites Folders  Media Id  Items Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List items inside a favorite folder",
+        "tags": [
+          "favorites"
+        ]
+      }
+    },
+    "/api/v2/followings": {
+      "get": {
+        "description": "List followings. When ``with_detail=true``, each item gets an extra\n``detail`` field with profile + stat + latest video — useful for quality\nfiltering. Note: triggers extra requests; respects the global rate limit.",
+        "operationId": "list_followings_api_v2_followings_get",
+        "parameters": [
+          {
+            "description": "The owning account's mid",
+            "in": "query",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "description": "The owning account's mid",
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "desc | asc",
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "default": "desc",
+              "description": "desc | asc",
+              "title": "Order",
+              "type": "string"
+            }
+          },
+          {
+            "description": "attention | (empty) for default",
+            "in": "query",
+            "name": "order_type",
+            "required": false,
+            "schema": {
+              "default": "attention",
+              "description": "attention | (empty) for default",
+              "title": "Order Type",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Also fetch profile + recent video for each mid (slower)",
+            "in": "query",
+            "name": "with_detail",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Also fetch profile + recent video for each mid (slower)",
+              "title": "With Detail",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "concurrency",
+            "required": false,
+            "schema": {
+              "default": 3,
+              "maximum": 10,
+              "minimum": 1,
+              "title": "Concurrency",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowingListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List one page of followings (optionally enriched)",
+        "tags": [
+          "followings"
+        ]
+      }
+    },
+    "/api/v2/followings/clear": {
+      "post": {
+        "description": "Background-clear all followings. Equivalent to v1 ``POST /api/clean/followings``\nbut returns immediately with a task_id.",
+        "operationId": "clear_followings_task_api_v2_followings_clear_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unfollow every following (async task)",
+        "tags": [
+          "followings"
+        ]
+      }
+    },
+    "/api/v2/followings/unfollow": {
+      "post": {
+        "description": "Sequentially unfollow each mid (B 站 has no batch endpoint). Subject\nto the global rate limit — long lists (>50) should use\n``POST /followings/unfollow-task`` instead.",
+        "operationId": "unfollow_many_api_v2_followings_unfollow_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnfollowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchActionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unfollow a specific set of mids (synchronous)",
+        "tags": [
+          "followings"
+        ]
+      }
+    },
+    "/api/v2/followings/unfollow-task": {
+      "post": {
+        "description": "Start a background unfollow. Poll ``GET /tasks/{task_id}`` for progress.\n\nRecommended for batches >50 since the HTTP client may time out on the\nsynchronous endpoint.",
+        "operationId": "unfollow_many_task_api_v2_followings_unfollow_task_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnfollowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unfollow many mids as an async task (returns task_id)",
+        "tags": [
+          "followings"
+        ]
+      }
+    },
+    "/api/v2/followings/{target_mid}": {
+      "get": {
+        "description": "Combines ``/users/{mid}`` + ``/users/{mid}/stat`` + first video into\na single shape for quality scoring.",
+        "operationId": "get_following_detail_api_v2_followings__target_mid__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "target_mid",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Target Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowingDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get full quality profile of one UP",
+        "tags": [
+          "followings"
+        ]
+      }
+    },
+    "/api/v2/history": {
+      "get": {
+        "description": "Returns ``{cursor, list}``. Send ``cursor.max`` + ``cursor.view_at`` as\nthe next call's ``max_id`` + ``view_at`` to page through.",
+        "operationId": "list_history_api_v2_history_get",
+        "parameters": [
+          {
+            "description": "Cursor: last ``cursor.max`` from previous page",
+            "in": "query",
+            "name": "max_id",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Cursor: last ``cursor.max`` from previous page",
+              "title": "Max Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Filter: archive | pgc | live | ...",
+            "in": "query",
+            "name": "business",
+            "required": false,
+            "schema": {
+              "default": "",
+              "description": "Filter: archive | pgc | live | ...",
+              "title": "Business",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Cursor: last ``cursor.view_at``",
+            "in": "query",
+            "name": "view_at",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "description": "Cursor: last ``cursor.view_at``",
+              "title": "View At",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "title": "Type",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List History Api V2 History Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List watch history (cursor-paginated)",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v2/history/clear": {
+      "post": {
+        "description": "Unlike other ``/clear`` endpoints this is one B 站 call so we don't\nbother with the task queue.",
+        "operationId": "clear_history_api_v2_history_clear_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Clear History Api V2 History Clear Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Wipe all watch history (single call, synchronous)",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v2/history/delete": {
+      "post": {
+        "operationId": "delete_history_api_v2_history_delete_post",
+        "parameters": [
+          {
+            "description": "e.g. ``archive_12345`` or ``pgc_67890``",
+            "in": "query",
+            "name": "kid",
+            "required": true,
+            "schema": {
+              "description": "e.g. ``archive_12345`` or ``pgc_67890``",
+              "title": "Kid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete History Api V2 History Delete Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete a single history entry by ``kid``",
+        "tags": [
+          "history"
+        ]
+      }
+    },
+    "/api/v2/me": {
+      "get": {
+        "description": "Return ``{isLogin, mid, uname, ...}`` for the SESSDATA in headers.\n\nUse this as the first call in any AI workflow — it both verifies the\nsession and gives you the ``mid`` needed by other endpoints.",
+        "operationId": "get_me_api_v2_me_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SelfInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get the currently authenticated user",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v2/relation/tags": {
+      "get": {
+        "operationId": "list_tags_api_v2_relation_tags_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Tags Api V2 Relation Tags Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List my custom following groups (tags)",
+        "tags": [
+          "relation-tags"
+        ]
+      },
+      "post": {
+        "operationId": "create_tag_api_v2_relation_tags_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Tag Api V2 Relation Tags Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create a new following group",
+        "tags": [
+          "relation-tags"
+        ]
+      }
+    },
+    "/api/v2/relation/tags/members": {
+      "post": {
+        "description": "Useful \"safety net\" workflow: tag suspicious accounts first, audit\nthem in B 站's UI, then unfollow after confirming. Pass ``replace=true``\nto remove from other tags.",
+        "operationId": "tag_users_api_v2_relation_tags_members_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagUsersRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Tag Users Api V2 Relation Tags Members Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add mids to a tag (find/create by name if needed)",
+        "tags": [
+          "relation-tags"
+        ]
+      }
+    },
+    "/api/v2/relation/tags/{tagid}": {
+      "delete": {
+        "operationId": "delete_tag_api_v2_relation_tags__tagid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tagid",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "title": "Tagid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Delete Tag Api V2 Relation Tags  Tagid  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete a following group",
+        "tags": [
+          "relation-tags"
+        ]
+      },
+      "put": {
+        "operationId": "rename_tag_api_v2_relation_tags__tagid__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tagid",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "title": "Tagid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Rename Tag Api V2 Relation Tags  Tagid  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rename a following group",
+        "tags": [
+          "relation-tags"
+        ]
+      }
+    },
+    "/api/v2/relation/tags/{tagid}/users": {
+      "get": {
+        "operationId": "list_tag_users_api_v2_relation_tags__tagid__users_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tagid",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "title": "Tagid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response List Tag Users Api V2 Relation Tags  Tagid  Users Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List members of a tag",
+        "tags": [
+          "relation-tags"
+        ]
+      }
+    },
+    "/api/v2/tasks": {
+      "get": {
+        "operationId": "list_tasks_api_v2_tasks_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaskInfo"
+                  },
+                  "title": "Response List Tasks Api V2 Tasks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List all known tasks (in-memory)",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/v2/tasks/clean-all": {
+      "post": {
+        "description": "Start a single async task that wipes everything. Poll\n``GET /tasks/{task_id}`` for progress; ``result`` holds the per-resource\ncounts at the end.",
+        "operationId": "clean_all_task_api_v2_tasks_clean_all_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskAck"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run clear followings + favorites + dynamics + history as one task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/v2/tasks/{task_id}": {
+      "delete": {
+        "operationId": "cancel_task_api_v2_tasks__task_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Cancel Task Api V2 Tasks  Task Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel a running task",
+        "tags": [
+          "tasks"
+        ]
+      },
+      "get": {
+        "operationId": "get_task_api_v2_tasks__task_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get status / progress / errors / result of a task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/v2/users/{mid}": {
+      "get": {
+        "description": "Profile fields include ``name``, ``sign``, ``level``, ``face``, etc.\n\nNote: follower count is **not** here — use ``GET /users/{mid}/stat``.",
+        "operationId": "get_user_info_api_v2_users__mid__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get User Info Api V2 Users  Mid  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get a UP's public profile (WBI signed)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v2/users/{mid}/stat": {
+      "get": {
+        "description": "Returns ``{mid, follower, following, whisper, black}``.",
+        "operationId": "get_user_stat_api_v2_users__mid__stat_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get User Stat Api V2 Users  Mid  Stat Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get a UP's follower/following counts",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v2/users/{mid}/videos": {
+      "get": {
+        "description": "Returned ``data.list.vlist[].pubdate`` is the upload timestamp.\n\nUse page=1, page_size=1 to cheaply detect \"last upload time\" for activity\nfiltering at scale.",
+        "operationId": "get_user_videos_api_v2_users__mid__videos_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mid",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Mid",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "pubdate | click | stow",
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "default": "pubdate",
+              "description": "pubdate | click | stow",
+              "title": "Order",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get User Videos Api V2 Users  Mid  Videos Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List a UP's video uploads (WBI signed)",
+        "tags": [
+          "users"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "Identity / session probing",
+      "name": "me"
+    },
+    {
+      "description": "Public UP profile + stats + uploads",
+      "name": "users"
+    },
+    {
+      "description": "List, inspect, selectively unfollow",
+      "name": "followings"
+    },
+    {
+      "description": "Folders + items + selective delete",
+      "name": "favorites"
+    },
+    {
+      "description": "Posts list + selective delete",
+      "name": "dynamics"
+    },
+    {
+      "description": "Watch history list + delete",
+      "name": "history"
+    },
+    {
+      "description": "Custom following groups (safety net)",
+      "name": "relation-tags"
+    },
+    {
+      "description": "Long-running async task queue",
+      "name": "tasks"
+    },
+    {
+      "description": "Legacy clear-all endpoints (kept for compatibility)",
+      "name": "v1"
+    }
+  ]
+}

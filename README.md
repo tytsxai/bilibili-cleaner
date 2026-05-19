@@ -272,25 +272,44 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
 ```
 bilibili-cleaner/
-├── backend/                  # Python 后端（FastAPI）
-│   ├── api/                  # B 站 API 封装
-│   │   ├── auth.py           # 二维码登录
-│   │   ├── relation.py       # 关注管理
-│   │   ├── favorite.py       # 收藏管理
-│   │   ├── dynamic.py        # 动态管理
-│   │   ├── history.py        # 历史记录
-│   │   ├── wbi.py            # WBI 签名算法
-│   │   └── client.py         # HTTP 客户端
-│   ├── services/
-│   │   └── cleaner.py        # 批量清理服务
-│   └── main.py               # FastAPI 入口
+├── AGENTS.md                 # AI 编排手册（重要）
+├── docs/API.md               # 完整 HTTP+CLI 参考 + cookbook
+├── openapi.json              # OpenAPI 3.x 快照
+├── backend/
+│   ├── api/                  # B 站 API 封装层（薄）
+│   │   ├── auth.py           # 二维码登录 + 自身信息
+│   │   ├── relation.py       # 关注 follow / unfollow / 状态查询
+│   │   ├── relation_tag.py   # 关注分组（review-then-unfollow 工作流）
+│   │   ├── user.py           # UP 资料 / 粉丝数 / 投稿列表（WBI）
+│   │   ├── favorite.py       # 收藏夹 + 内容列表
+│   │   ├── dynamic.py        # 动态（WBI）
+│   │   ├── history.py        # 观看历史
+│   │   ├── wbi.py            # WBI 签名 + signed_get 助手
+│   │   ├── ratelimit.py      # 令牌桶限流
+│   │   ├── retry.py          # 风控自动重试
+│   │   └── client.py         # 统一 httpx 客户端（限流+重试集成）
+│   ├── services/             # 业务层（list/iter/batch 组合）
+│   │   ├── following.py      # 含 enrich(profile+stat+latest_video)
+│   │   ├── favorite.py
+│   │   ├── dynamic.py
+│   │   ├── history.py
+│   │   ├── tag.py
+│   │   ├── tasks.py          # 长任务注册表（task_id + 轮询）
+│   │   └── cleaner.py        # v1 thin wrapper
+│   ├── routers/              # FastAPI v2 APIRouter（按资源）
+│   ├── schemas.py            # pydantic 响应模型
+│   ├── cli/                  # typer CLI（双栈：直接 import service 层）
+│   │   ├── main.py
+│   │   ├── credentials.py
+│   │   └── commands/
+│   └── main.py               # FastAPI 入口（v1 + v2 共存）
 ├── frontend/                 # 原生 HTML/CSS/JS 前端
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
-├── tests/                    # 单元测试（95% 覆盖）
+├── tests/                    # 单元测试（119 测试，85% 覆盖）
+├── scripts/
+│   └── dump_openapi.py       # 生成 openapi.json 快照
 ├── Dockerfile
 ├── docker-compose.yml
+├── pyproject.toml            # [project.scripts] bilibili-cleaner
 └── README.md
 ```
 
@@ -298,19 +317,29 @@ bilibili-cleaner/
 
 ## 🔌 API 接口说明
 
-启动服务后访问 `http://localhost:8000/docs` 查看 Swagger 文档。
+完整接口文档：
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| `/api/qrcode` | GET | 获取登录二维码 |
-| `/api/qrcode/poll/{key}` | GET | 轮询扫码状态 |
-| `/api/clean/followings` | POST | 清理关注列表 |
-| `/api/clean/favorites` | POST | 清理全部收藏 |
-| `/api/clean/dynamics` | POST | 清理全部动态 |
-| `/api/clean/history` | POST | 清空观看历史 |
-| `/api/clean/all` | POST | 一键清理全部 |
+- **[AGENTS.md](AGENTS.md)** — AI 编排手册（推荐 AI 使用者从这里入门）
+- **[docs/API.md](docs/API.md)** — 完整 HTTP + CLI 参考，含 3 个典型工作流 cookbook
+- **[openapi.json](openapi.json)** — OpenAPI 3.x 快照（可被工具直接消费）
+- 启动服务后 `http://localhost:8000/docs` 是交互式 Swagger
 
-写操作请求头需带上：
+### v2 接口（推荐，AI 编排入口）
+
+所有 v2 接口挂在 `/api/v2/*` 下，按资源组织，提供 `list / get / batch-action`：
+
+| 资源组 | 关键端点 |
+|---|---|
+| `me` | `GET /me` |
+| `users` | `GET /users/{mid}` · `GET /users/{mid}/stat` · `GET /users/{mid}/videos` |
+| `followings` | `GET /followings?mid&with_detail` · `GET /followings/{mid}` · `POST /followings/unfollow` · `POST /followings/unfollow-task` · `POST /followings/clear` |
+| `favorites` | `GET /favorites/folders` · `GET /favorites/folders/{id}/items` · `POST /favorites/folders/{id}/delete` · `POST /favorites/clear` |
+| `dynamics` | `GET /dynamics?mid&offset` · `POST /dynamics/delete` · `POST /dynamics/clear` |
+| `history` | `GET /history` · `POST /history/delete` · `POST /history/clear` |
+| `relation/tags` | `GET /relation/tags` · `POST /relation/tags` · `POST /relation/tags/members` |
+| `tasks` | `GET /tasks/{id}` · `DELETE /tasks/{id}` · `POST /tasks/clean-all` |
+
+写操作请求头需带：
 
 ```
 SESSDATA: <你的 SESSDATA>
@@ -318,11 +347,46 @@ bili_jct: <你的 bili_jct>
 Content-Type: application/json
 ```
 
-Body 示例（除 `/api/clean/history` 外均需要）：
+### v1 接口（向后兼容）
 
-```json
-{ "mid": 12345678 }
+保留以下原始接口供旧前端/脚本使用：
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/qrcode` | GET | 获取登录二维码 |
+| `/api/qrcode/poll/{key}` | GET | 轮询扫码状态 |
+| `/api/clean/followings` | POST | 清理关注列表（v2 别名） |
+| `/api/clean/favorites` | POST | 清理全部收藏（v2 别名） |
+| `/api/clean/dynamics` | POST | 清理全部动态（v2 别名） |
+| `/api/clean/history` | POST | 清空观看历史（v2 别名） |
+| `/api/clean/all` | POST | 一键清理全部（v2 别名） |
+
+---
+
+## 💻 CLI 用法
+
+安装：
+
+```bash
+pip install -e .
+bilibili-cleaner --help
 ```
+
+常用命令（全部默认 JSON 输出，加 `--pretty` 可以人类可读）：
+
+```bash
+bilibili-cleaner auth login                  # 扫码登录并保存到 ~/.bilibili-cleaner/credentials.json
+bilibili-cleaner me                          # 验证会话
+bilibili-cleaner followings list --with-detail | jq '.items[].detail.stat'
+bilibili-cleaner followings detail 12345
+bilibili-cleaner followings unfollow 111 222 333
+bilibili-cleaner tag add-users 111 222 --tag-name to-review
+bilibili-cleaner favorites folders
+bilibili-cleaner favorites items 9876
+bilibili-cleaner history list
+```
+
+凭证也可以通过 `BILI_SESSDATA` / `BILI_JCT` 环境变量提供，便于 AI / 容器环境使用。
 
 ---
 

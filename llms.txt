@@ -6,6 +6,9 @@ Designed for people who are about to delete a Bilibili account, declutter a side
 
 ## Key docs
 
+- [AGENTS.md](AGENTS.md): **AI orchestration manual** — entry point for Claude / Cursor / other agents. Lists capabilities, recommended workflows, critical limits.
+- [docs/API.md](docs/API.md): Full HTTP API + CLI reference with curl examples and 3 cookbooks (selective unfollow / favorites audit / safe tag-then-unfollow).
+- [openapi.json](openapi.json): Machine-readable OpenAPI 3.x snapshot (regenerate via `python scripts/dump_openapi.py`).
 - [README.md](README.md): Full Chinese-primary README (功能特性 / 快速开始 / 图文教程 / FAQ / 安全说明 / 项目结构 / API 接口).
 - [README.en.md](README.en.md): English summary (what it does, quick start, FAQ).
 - [CHANGELOG.md](CHANGELOG.md): Version history (1.0.0 → current).
@@ -14,12 +17,16 @@ Designed for people who are about to delete a Bilibili account, declutter a side
 ## What this tool does
 
 - 扫码登录 / QR-code login via Bilibili mobile app (no password)
-- 批量取关 / Bulk unfollow every UP 主 (`/x/relation/modify`)
-- 清空收藏 / Empty every favorite folder (`/x/v3/fav/resource/batch-del`)
-- 删除全部动态 / Delete every dynamic including new opus 图文 (WBI-signed fetch + `rm_dynamic`)
-- 清空观看历史 / Wipe watch history (`/x/v2/history/clear`)
-- 一键全部清理 / One-click full wipe
-- 实时执行日志、深色/浅色主题、Web UI
+- 列出关注 / List followings with optional profile + stat + latest-video enrichment for quality filtering
+- 选择性取关 / Selective unfollow (single mid, batch of mids, or every following) via async task queue
+- 关注分组 / Manage 关注分组 (custom tags) — useful for "tag → review → unfollow" workflows
+- 列出/删除收藏 / List & selectively delete favorite items (per folder, with full metadata)
+- 列出/删除动态 / List & selectively delete dynamics including new opus 图文 (WBI-signed fetch + `rm_dynamic`)
+- 列出/删除历史 / List & selectively delete watch history (cursor-paginated)
+- UP 主资料 / Public UP profile, stat (follower/following counts), recent uploads — for filter logic
+- 一键全部清理 / One-click full wipe (async task with progress)
+- HTTP API (`/api/v2/*`) + CLI (`bilibili-cleaner`) + Web UI, all backed by the same service layer
+- Global rate limit (1.5 r/s) + auto-retry on `-352` / HTTP 412 risk-control
 
 ## What this tool does NOT do
 
