@@ -4,6 +4,8 @@ from .dynamic import DynamicApi
 from .favorite import FavoriteApi
 from .history import HistoryApi
 from .relation import RelationApi
+from .relation_tag import RelationTagApi
+from .user import UserApi
 
 __all__ = [
     "AuthApi",
@@ -13,4 +15,6 @@ __all__ = [
     "FavoriteApi",
     "HistoryApi",
     "RelationApi",
+    "RelationTagApi",
+    "UserApi",
 ]

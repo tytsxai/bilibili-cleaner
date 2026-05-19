@@ -6,6 +6,7 @@ from .client import BiliApiClient
 
 FOLDERS_URL = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
 RESOURCE_IDS_URL = "https://api.bilibili.com/x/v3/fav/resource/ids"
+RESOURCE_LIST_URL = "https://api.bilibili.com/x/v3/fav/resource/list"
 BATCH_DELETE_URL = "https://api.bilibili.com/x/v3/fav/resource/batch-del"
 
 
@@ -31,6 +32,38 @@ class FavoriteApi:
             except (TypeError, ValueError):
                 continue
         return results
+
+    async def list_resources(
+        self,
+        media_id: int,
+        *,
+        pn: int = 1,
+        ps: int = 20,
+        keyword: str = "",
+        order: str = "mtime",
+        tid: int = 0,
+        type_: int = 0,
+    ) -> dict[str, Any]:
+        """List items in a favorite folder with rich metadata.
+
+        Returned ``data`` includes ``info`` (folder meta) and ``medias`` list
+        with ``id``/``type``/``title``/``bvid``/``upper``/``duration``/...
+        """
+        payload = await self._client.get(
+            RESOURCE_LIST_URL,
+            params={
+                "media_id": media_id,
+                "pn": pn,
+                "ps": ps,
+                "keyword": keyword,
+                "order": order,
+                "tid": tid,
+                "type": type_,
+                "platform": "web",
+            },
+        )
+        data = payload.get("data") if isinstance(payload, dict) else None
+        return data if isinstance(data, dict) else {}
 
     async def batch_delete(self, media_id: int, resources: Sequence[str] | str) -> dict[str, Any]:
         if isinstance(resources, str):
