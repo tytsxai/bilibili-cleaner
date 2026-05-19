@@ -368,3 +368,7 @@ pytest tests/ --cov=backend --cov-report=html
 [MIT License](LICENSE) © 2024–2026
 
 如果本项目对你有帮助，欢迎点一个 ⭐ Star 支持！
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=tytsxai/bilibili-cleaner&type=Date)](https://www.star-history.com/#tytsxai/bilibili-cleaner&Date)
