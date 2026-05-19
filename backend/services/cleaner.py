@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Sequence
 
-from backend.api import DynamicApi, FavoriteApi, HistoryApi, RelationApi
 from backend.api.client import BiliApiClient
 
-logger = logging.getLogger(__name__)
+from .dynamic import DynamicService
+from .favorite import FavoriteService
+from .following import FollowingService
+from .history import HistoryService
 
 
 @dataclass(frozen=True)
@@ -16,120 +16,30 @@ class CleanResult:
 
 
 class CleanerService:
+    """Thin v1-compatible wrapper around the per-resource services.
+
+    Preserved for ``/api/clean/*`` legacy endpoints; new work should depend
+    on the underlying ``FollowingService`` / ``FavoriteService`` / etc.
+    """
+
     def __init__(self, client: BiliApiClient) -> None:
-        self._client = client
-        self._relation_api = RelationApi(client)
-        self._favorite_api = FavoriteApi(client)
-        self._dynamic_api = DynamicApi(client)
-        self._history_api = HistoryApi(client)
+        self._following = FollowingService(client)
+        self._favorite = FavoriteService(client)
+        self._dynamic = DynamicService(client)
+        self._history = HistoryService(client)
 
     async def clear_all_followings(self, mid: int) -> CleanResult:
-        total = 0
-        safety = 0
-        while True:
-            data = await self._relation_api.get_followings(mid, pn=1, ps=50)
-            mids = self._extract_following_mids(data)
-            if not mids:
-                break
-            for target in mids:
-                try:
-                    await self._relation_api.unfollow(target)
-                    total += 1
-                except Exception as e:
-                    logger.warning("Failed to unfollow mid=%s: %s", target, e)
-            safety += 1
-            if safety > 200:
-                break
-        return CleanResult(total)
+        result = await self._following.clear_all(mid)
+        return CleanResult(int(result.get("ok", 0)))
 
     async def clear_all_favorites(self, mid: int) -> CleanResult:
-        total = 0
-        data = await self._favorite_api.get_folders(mid)
-        folders = data.get("list") if isinstance(data, dict) else None
-        if not isinstance(folders, list):
-            return CleanResult(0)
-        for folder in folders:
-            if not isinstance(folder, Mapping):
-                continue
-            media_id = _safe_int(folder.get("id") or folder.get("media_id"))
-            if media_id is None:
-                continue
-            resource_ids = await self._favorite_api.get_folder_ids(media_id)
-            if not resource_ids:
-                continue
-            resources = [f"{item}:2" for item in resource_ids]
-            for batch in _chunked(resources, 100):
-                await self._favorite_api.batch_delete(media_id, batch)
-                total += len(batch)
-        return CleanResult(total)
+        result = await self._favorite.clear_all(mid)
+        return CleanResult(int(result.get("ok", 0)))
 
     async def clear_all_dynamics(self, mid: int) -> CleanResult:
-        total = 0
-        offset: str | None = None
-        safety = 0
-        while True:
-            data = await self._dynamic_api.get_dynamics(mid, offset=offset)
-            items = data.get("items") if isinstance(data, dict) else None
-            if not isinstance(items, list) or not items:
-                break
-            for item in items:
-                if not isinstance(item, Mapping):
-                    continue
-                dynamic_id = _extract_dynamic_id(item)
-                if dynamic_id is None:
-                    continue
-                try:
-                    await self._dynamic_api.delete_dynamic(dynamic_id)
-                    total += 1
-                except Exception as e:
-                    logger.warning("Failed to delete dynamic id=%s: %s", dynamic_id, e)
-            has_more = bool(data.get("has_more")) if isinstance(data, dict) else False
-            next_offset = data.get("offset") if isinstance(data, dict) else None
-            if not has_more or not next_offset or next_offset == offset:
-                break
-            offset = str(next_offset)
-            safety += 1
-            if safety > 200:
-                break
-        return CleanResult(total)
+        result = await self._dynamic.clear_all(mid)
+        return CleanResult(int(result.get("ok", 0)))
 
     async def clear_history(self) -> CleanResult:
-        await self._history_api.clear_history()
+        await self._history.clear()
         return CleanResult(1)
-
-    @staticmethod
-    def _extract_following_mids(data: Mapping[str, Any]) -> list[int]:
-        items = data.get("list") if isinstance(data, Mapping) else None
-        if not isinstance(items, list):
-            return []
-        mids: list[int] = []
-        for item in items:
-            if not isinstance(item, Mapping):
-                continue
-            mid_value = _safe_int(item.get("mid"))
-            if mid_value is not None:
-                mids.append(mid_value)
-        return mids
-
-
-def _extract_dynamic_id(item: Mapping[str, Any]) -> int | None:
-    for key in ("id_str", "id", "dynamic_id", "dyn_id"):
-        if key not in item:
-            continue
-        value = item.get(key)
-        dynamic_id = _safe_int(value)
-        if dynamic_id is not None:
-            return dynamic_id
-    return None
-
-
-def _safe_int(value: Any) -> int | None:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def _chunked(items: Sequence[Any], size: int) -> Iterable[list[Any]]:
-    for index in range(0, len(items), size):
-        yield list(items[index : index + size])
