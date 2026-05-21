@@ -1,19 +1,37 @@
 [project]
 name = "bilibili-cleaner"
 version = "1.2.0"
-description = "Self-hosted toolkit to inspect and clean a Bilibili account. Ships an HTTP API (FastAPI) and a CLI."
+description = "Open-source self-hosted Bilibili account cleaner with FastAPI HTTP API, Web UI, CLI, OpenAPI schema, rate limiting, and async cleanup tasks."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "tytsxai" }]
-keywords = ["bilibili", "cleaner", "unfollow", "cli", "fastapi"]
+keywords = [
+    "bilibili",
+    "bilibili-cleaner",
+    "account-cleanup",
+    "bulk-unfollow",
+    "favorites-cleanup",
+    "watch-history",
+    "self-hosted",
+    "privacy-tool",
+    "openapi",
+    "cli",
+    "fastapi",
+]
 classifiers = [
     "License :: OSI Approved :: MIT License",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Utilities",
 ]
 dependencies = [
     "fastapi>=0.104.0",
@@ -31,6 +49,9 @@ bilibili-cleaner = "backend.cli.main:app"
 
 [project.urls]
 Homepage = "https://github.com/tytsxai/bilibili-cleaner"
+Repository = "https://github.com/tytsxai/bilibili-cleaner"
+Documentation = "https://github.com/tytsxai/bilibili-cleaner#readme"
+Changelog = "https://github.com/tytsxai/bilibili-cleaner/blob/main/CHANGELOG.md"
 Issues = "https://github.com/tytsxai/bilibili-cleaner/issues"
 
 [build-system]

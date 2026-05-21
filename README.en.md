@@ -1,39 +1,44 @@
-# Bilibili Cleaner · One-Click Bilibili Account Cleanup Tool
+# Bilibili Cleaner · Self-hosted Bilibili Account Cleaner
 
-> **Keywords**: bilibili cleaner, bulk unfollow bilibili, clear bilibili favorites, delete bilibili dynamics, wipe bilibili watch history, bilibili account wipe, delete bilibili account data, bilibili pre-deletion cleanup, B站清理工具, 哔哩哔哩批量清理
+**Bilibili Cleaner** is an open-source, self-hosted toolkit for inspecting and cleaning a Bilibili account. It provides a local Web UI, FastAPI HTTP API, Python CLI, OpenAPI schema, rate limiting, retry handling, and async tasks for long-running cleanup operations.
 
-[![CI](https://github.com/tytsxai/bilibili-cleaner/actions/workflows/ci.yml/badge.svg)](https://github.com/tytsxai/bilibili-cleaner/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](tests/)
+中文主文档: [README.md](README.md) · API reference: [docs/API.md](docs/API.md) · FAQ: [docs/FAQ.md](docs/FAQ.md) · LLM summary: [llms.txt](llms.txt)
 
-[简体中文](README.md) · [llms.txt](llms.txt) · [Changelog](CHANGELOG.md)
+## What It Solves
 
-**Bilibili Cleaner** is an open-source, self-hosted web tool that wipes a Bilibili (B 站) account in a single click: bulk-unfollow everyone, empty every favorite folder, delete every dynamic (post), and clear the watch history. It runs entirely on your own machine — login by scanning a QR code with the Bilibili mobile app, and every API call goes directly from your computer to bilibili.com.
+Cleaning a Bilibili account manually is slow: followings, favorites, dynamics, and watch history may require hundreds or thousands of clicks. Closed third-party tools also require trust. This project runs on your own machine and calls Bilibili Web APIs directly from your local environment.
 
-## Why use it
+## Who It Is For
 
-- You're about to delete a Bilibili account and want a clean slate first
-- You're consolidating a side / "小号" account
-- You're handing the account to someone else and need to wipe history first
-- You want to scrub years of clutter without sitting through 5,000 manual clicks
+- Users preparing to delete or retire a Bilibili account.
+- Users cleaning a side account, test account, or old account.
+- Developers who need a local API or CLI for Bilibili account cleanup workflows.
+- AI agents that need structured listing, enrichment, selective action, and task polling endpoints.
 
-## Features
+## Core Features
 
-| Feature | Description |
-|---|---|
-| 🔐 QR-code login | Scan with the Bilibili mobile app — no password required |
-| 👥 Bulk unfollow | Pulls your entire following list and unfollows one by one |
-| ⭐ Empty favorites | Walks every favorite folder and batch-deletes videos |
-| 📝 Delete every dynamic | Text, repost, opus (image+text), video — all supported |
-| 🕐 Wipe watch history | Clears the full watch history in one call |
-| 🚀 One-click "Clean Everything" | Runs all four operations sequentially |
-| 🌓 Light / dark theme | Follows the system or toggle manually |
-| 📋 Live execution log | Real-time progress + results in the browser |
+- QR-code login with the Bilibili mobile app.
+- List followings, enrich them with UP profile/stat/latest-video data, and unfollow selected `mid`s.
+- Empty favorite folders or delete selected favorite resources.
+- List and delete dynamics, including newer `opus` image-text dynamics via WBI-signed fetches.
+- List, delete, or clear watch history.
+- Manage Bilibili following groups for safe "tag first, review later, then unfollow" workflows.
+- Async task queue for long-running batch operations.
+- CLI command `bilibili-cleaner` and canonical `/api/v2/*` HTTP API.
+- OpenAPI schema for tool integration and AI-agent consumption.
+
+## Limitations
+
+- Deleted data cannot be recovered.
+- Bilibili has no reliable public API for "list comments I posted", so this project does not delete posted comments.
+- Private messages, fans, bangumi follows, and watch-later are outside the current scope.
+- Bilibili has no real batch-unfollow endpoint; this project unfollows one account at a time with rate limiting.
+- Task state is in memory. Restarting the service loses task progress.
+- The tool only operates on the account that logged in.
 
 ## Quick Start
 
-### Option A — Docker (recommended)
+### Docker Compose
 
 ```bash
 git clone https://github.com/tytsxai/bilibili-cleaner.git
@@ -41,91 +46,88 @@ cd bilibili-cleaner
 docker compose up -d
 ```
 
-Open `http://localhost:8000` in your browser. To stop:
+Open:
+
+```text
+http://localhost:8000
+```
+
+Stop:
 
 ```bash
 docker compose down
 ```
 
-> Port 8000 in use? Edit `docker-compose.yml` and change `"8000:8000"` to e.g. `"8080:8000"`.
-
-### Option B — Python locally
+### Python
 
 ```bash
 git clone https://github.com/tytsxai/bilibili-cleaner.git
 cd bilibili-cleaner
+
 python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate
+
 pip install -r backend/requirements.txt
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
 
-## How to use
+Then open:
 
-1. Start the service and open `http://localhost:8000`.
-2. Open the Bilibili mobile app → tap the scan icon → scan the QR code on the page.
-3. Confirm "登录" on your phone. The page jumps to the control console showing your UID.
-4. Click the **执行** button next to any cleanup category, or **一键清理所有** for everything.
-5. Watch the live log on the right for progress and totals.
-6. Click **退出登录** when done to wipe credentials from your browser.
+- Web UI: `http://localhost:8000`
+- Swagger UI: `http://localhost:8000/docs`
+- OpenAPI JSON: `http://localhost:8000/openapi.json`
 
-## FAQ
+## CLI
 
-**Q: Is my account at risk?**
-Credentials (`SESSDATA`, `bili_jct`) live only in your browser's localStorage. Every API call is direct from your machine to bilibili.com. Code is open-source and auditable. Click "退出登录" when finished.
+```bash
+pip install -e .
+bilibili-cleaner auth login
+bilibili-cleaner me
 
-**Q: How fast is the cleanup?**
-Operations are throttled at ~1–3 requests/sec to avoid 风控 (rate-limit). A few hundred items usually finish in a few minutes.
+bilibili-cleaner followings list --with-detail
+bilibili-cleaner followings all
+bilibili-cleaner followings unfollow 111 222 333
 
-**Q: Can I close the browser tab while it's running?**
-No. Requests are issued by the frontend; closing the tab cancels them. Keep the tab open.
+bilibili-cleaner favorites folders
+bilibili-cleaner dynamics list
+bilibili-cleaner history list
+```
 
-**Q: Can I recover what I deleted?**
-No. All operations are permanent. Bilibili has no recycle bin. Double-check before clicking.
+Credentials are stored at `~/.bilibili-cleaner/credentials.json` or can be provided through `BILI_SESSDATA` and `BILI_JCT`.
 
-**Q: Will my account be banned?**
-This calls the same Web APIs that the official site uses, so a ban is unlikely. Heavy rapid use may trigger temporary rate-limiting (not a ban) — wait 10–30 minutes and retry.
+## API
 
-**Q: Why isn't there a "delete my comments" feature?**
-Bilibili does not expose a public API to list comments you posted (only "comments on your stuff"). The previous v1.0 attempt was misleading and was removed in v1.1.0.
+Recommended endpoints are under `/api/v2/*`.
 
-**Q: Does it work on Windows / macOS / Linux?**
-All three. Docker Desktop is the simplest path; Python 3.10+ works directly.
+| Area | Endpoints |
+|---|---|
+| Identity | `GET /api/v2/me` |
+| Users | `GET /api/v2/users/{mid}`, `/stat`, `/videos` |
+| Followings | `GET /api/v2/followings`, `POST /api/v2/followings/unfollow`, `POST /api/v2/followings/unfollow-task` |
+| Favorites | `GET /api/v2/favorites/folders`, `GET /api/v2/favorites/folders/{id}/items`, `POST /api/v2/favorites/folders/{id}/delete` |
+| Dynamics | `GET /api/v2/dynamics`, `POST /api/v2/dynamics/delete` |
+| History | `GET /api/v2/history`, `POST /api/v2/history/delete`, `POST /api/v2/history/clear` |
+| Relation tags | `GET /api/v2/relation/tags`, `POST /api/v2/relation/tags`, `POST /api/v2/relation/tags/members` |
+| Tasks | `GET /api/v2/tasks`, `GET /api/v2/tasks/{id}`, `DELETE /api/v2/tasks/{id}` |
 
-**Q: Can I use this on someone else's account?**
-No. Only the account that scanned the QR code is touched.
+Write requests require:
 
-## What this tool does NOT do
+```text
+SESSDATA: <your SESSDATA>
+bili_jct: <your bili_jct>
+Content-Type: application/json
+```
 
-- Delete comments you posted (no Bilibili API for that)
-- Touch private messages, fans list, 追番 (bangumi follows), or 稍后再看 (watch-later)
-- Operate multiple accounts simultaneously
-- Send your data to any third-party server
+See [docs/API.md](docs/API.md) for curl recipes and cookbook workflows.
 
-## API surface
+## Privacy and Safety
 
-A FastAPI Swagger spec is available at `http://localhost:8000/docs` after starting. Endpoints:
+This project is a local tool, not a hosted service. Web credentials are stored in browser localStorage, and CLI credentials are stored locally. API calls go from your machine to bilibili.com. Use it only for accounts you own, and review carefully before running destructive operations.
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/api/qrcode` | GET | Issue a login QR code |
-| `/api/qrcode/poll/{key}` | GET | Poll QR scan status |
-| `/api/clean/followings` | POST | Unfollow everyone |
-| `/api/clean/favorites` | POST | Empty all favorites |
-| `/api/clean/dynamics` | POST | Delete all dynamics |
-| `/api/clean/history` | POST | Wipe watch history |
-| `/api/clean/all` | POST | Run all four |
+## Keywords
 
-## Acknowledgments
-
-- [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect) — Bilibili API reference
-- [nemo2011/bilibili-api](https://github.com/nemo2011/bilibili-api) — Dynamic / WBI signature reference
-- [FastAPI](https://fastapi.tiangolo.com/)
-
-## Disclaimer
-
-For personal account data cleanup only. All operations are irreversible. Use at your own risk and comply with Bilibili's terms of service. This project is not affiliated with Bilibili.
+Bilibili account cleanup, Bilibili cleaner, Bilibili bulk unfollow, clear Bilibili favorites, delete Bilibili dynamics, clear Bilibili watch history, self-hosted privacy tool, FastAPI Bilibili API, Bilibili CLI, AI agent OpenAPI integration.
 
 ## License
 
-MIT © 2024–2026 — see [LICENSE](LICENSE).
+MIT © 2024-2026. This project is not affiliated with Bilibili.

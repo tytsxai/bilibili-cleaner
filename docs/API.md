@@ -1,7 +1,17 @@
-# Bilibili Cleaner — HTTP API & CLI reference
+# Bilibili Cleaner API Reference / 哔哩哔哩账号清理 HTTP API 与 CLI
 
-Companion to [`AGENTS.md`](../AGENTS.md). All examples assume the server
-is running at `http://localhost:8000` (`uvicorn backend.main:app`).
+Bilibili Cleaner exposes a local FastAPI service and a Python CLI for
+structured Bilibili account cleanup workflows: list first, enrich when
+needed, filter locally, then run selective destructive actions. This
+reference is the developer-facing companion to [`README.md`](../README.md),
+[`llms.txt`](../llms.txt), and [`AGENTS.md`](../AGENTS.md).
+
+All examples assume the server is running at `http://localhost:8000`
+(`uvicorn backend.main:app`). The canonical machine-readable schema is
+[`openapi.json`](../openapi.json).
+
+中文定位：本文档用于开发者、脚本和 AI Agent 接入 Bilibili Cleaner，重点说明
+`/api/v2/*` 接口、CLI 命令、鉴权方式、限流风控和安全清理工作流。
 
 ## Conventions
 
@@ -298,5 +308,5 @@ Live, interactive docs at `http://localhost:8000/docs`. A committed
 snapshot lives at [`openapi.json`](../openapi.json); regenerate with:
 
 ```bash
-python scripts/dump_openapi.py
+python3 scripts/dump_openapi.py
 ```
