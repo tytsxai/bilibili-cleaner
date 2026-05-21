@@ -3,109 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B站账号快速清理工具</title>
+    <title>Bilibili Cleaner Web Console</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2300a8d8'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Arial' font-size='22' font-weight='700' fill='white'%3EBC%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <button class="theme-toggle" id="theme-toggle" title="切换主题">🌙</button>
-    <div class="container">
-        <header>
-            <h1>B站账号快速清理工具</h1>
-            <p class="subtitle">批量清理关注、收藏、动态和历史记录</p>
-        </header>
+    <div class="app-shell">
+        <aside class="sidebar" aria-label="主导航">
+            <div class="brand">
+                <div class="brand-mark">BC</div>
+                <div>
+                    <h1>Bilibili Cleaner</h1>
+                    <p>本地账号清理控制台</p>
+                </div>
+            </div>
 
-        <main>
-            <!-- 登录界面 -->
-            <div id="login-view" class="view">
-                <div class="card">
-                    <h2>扫码登录</h2>
-                    <div class="qrcode-container">
-                        <div id="qrcode-wrapper">
+            <nav class="nav-list" id="nav-list">
+                <button class="nav-item active" data-panel="overview-panel" type="button">总览</button>
+                <button class="nav-item" data-panel="followings-panel" type="button">关注审计</button>
+                <button class="nav-item" data-panel="favorites-panel" type="button">收藏夹</button>
+                <button class="nav-item" data-panel="dynamics-panel" type="button">动态</button>
+                <button class="nav-item" data-panel="history-panel" type="button">观看历史</button>
+            </nav>
+
+            <div class="sidebar-card">
+                <strong>安全原则</strong>
+                <p>先查看和筛选，再选择性操作。超过 100 项的删除建议先加入复核分组。</p>
+            </div>
+        </aside>
+
+        <div class="main-shell">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">Self-hosted Web UI · CLI / API / AI Agent 共享同一后端</p>
+                    <h2 id="page-title">本地账号清理控制台</h2>
+                </div>
+                <div class="topbar-actions">
+                    <button id="demo-toggle" class="btn btn-secondary" type="button">演示模式</button>
+                    <button id="theme-toggle" class="icon-btn" title="切换主题" type="button">◐</button>
+                    <button id="logout-btn" class="btn btn-ghost hidden" type="button">退出登录</button>
+                </div>
+            </header>
+
+            <main>
+                <section id="login-view" class="login-layout">
+                    <div class="login-copy">
+                        <p class="eyebrow">Local-first privacy tool</p>
+                        <h2>扫码登录后，在浏览器里完成审计、复核和清理。</h2>
+                        <p>Web UI 适合普通用户可视化操作；CLI 和 API 适合脚本、批处理和 AI Agent 编排。三者互不冲突，全部复用本地 FastAPI 服务。</p>
+                        <div class="feature-row">
+                            <span>关注筛选</span>
+                            <span>收藏预览</span>
+                            <span>任务进度</span>
+                            <span>风控提示</span>
+                        </div>
+                    </div>
+
+                    <div class="login-card">
+                        <h3>哔哩哔哩 App 扫码登录</h3>
+                        <div class="qrcode-box" id="qrcode-wrapper">
                             <img id="qrcode-img" src="" alt="登录二维码" class="hidden">
                             <div id="qrcode-loading">获取二维码中...</div>
-                            <div id="qrcode-expired" class="overlay hidden">
-                                <span>已过期<br>点击刷新</span>
+                            <button id="qrcode-expired" class="qrcode-overlay hidden" type="button">二维码已过期<br>点击刷新</button>
+                        </div>
+                        <p id="login-status" class="muted">请使用哔哩哔哩 App 扫码</p>
+                        <button id="demo-login-btn" class="btn btn-secondary full" type="button">使用脱敏演示数据预览</button>
+                    </div>
+                </section>
+
+                <section id="dashboard-view" class="dashboard hidden">
+                    <section class="status-grid">
+                        <article class="metric-card">
+                            <span>当前账号</span>
+                            <strong id="user-label">-</strong>
+                            <small id="session-label">等待登录</small>
+                        </article>
+                        <article class="metric-card">
+                            <span>已选候选</span>
+                            <strong id="selected-count">0</strong>
+                            <small>跨当前页面选择后可批量处理</small>
+                        </article>
+                        <article class="metric-card">
+                            <span>后台任务</span>
+                            <strong id="task-count">0</strong>
+                            <small id="task-summary">暂无运行任务</small>
+                        </article>
+                        <article class="metric-card warn">
+                            <span>删除风险</span>
+                            <strong>不可恢复</strong>
+                            <small>写操作前会显示对象数量和二次确认</small>
+                        </article>
+                    </section>
+
+                    <section id="overview-panel" class="panel active">
+                        <div class="panel-grid">
+                            <article class="workspace-card">
+                                <h3>推荐工作流</h3>
+                                <ol class="workflow-list">
+                                    <li>先在各工作区加载列表并筛选候选项。</li>
+                                    <li>关注清理优先加入 <code>to-review</code> 分组。</li>
+                                    <li>人工确认后再选择性取关或删除。</li>
+                                    <li>大批量操作使用异步任务并观察进度。</li>
+                                </ol>
+                            </article>
+                            <article class="workspace-card">
+                                <h3>能力入口</h3>
+                                <div class="capability-list">
+                                    <button class="quick-link" data-panel="followings-panel" type="button">审计关注质量</button>
+                                    <button class="quick-link" data-panel="favorites-panel" type="button">清理收藏资源</button>
+                                    <button class="quick-link" data-panel="dynamics-panel" type="button">删除历史动态</button>
+                                    <button class="quick-link" data-panel="history-panel" type="button">整理观看历史</button>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section id="followings-panel" class="panel">
+                        <div class="section-head">
+                            <div>
+                                <h3>关注审计</h3>
+                                <p>分页查看关注，按名称、签名、粉丝数和最近投稿筛选，再加入复核分组或异步取关。</p>
+                            </div>
+                            <div class="button-row">
+                                <button id="load-followings-btn" class="btn btn-primary" type="button">加载关注</button>
+                                <button id="tag-followings-btn" class="btn btn-secondary" type="button" disabled>加入 to-review</button>
+                                <button id="unfollow-selected-btn" class="btn btn-danger" type="button" disabled>异步取关</button>
                             </div>
                         </div>
-                        <p id="login-status">请使用哔哩哔哩App扫码</p>
-                    </div>
-                </div>
+
+                        <div class="toolbar">
+                            <label>搜索<input id="following-search" type="search" placeholder="昵称 / 签名 / UID"></label>
+                            <label>粉丝低于<input id="following-fans-max" type="number" min="0" placeholder="不限"></label>
+                            <label>最近投稿早于<input id="following-stale-days" type="number" min="1" placeholder="天数"></label>
+                            <label class="check-line"><input id="following-with-detail" type="checkbox" checked> 加载详情</label>
+                        </div>
+
+                        <div class="table-shell">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th><input id="followings-select-page" type="checkbox" aria-label="选择当前页"></th>
+                                        <th>UP 主</th>
+                                        <th>粉丝</th>
+                                        <th>投稿</th>
+                                        <th>最近视频</th>
+                                        <th>说明</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="followings-body"></tbody>
+                            </table>
+                        </div>
+                        <div class="pager">
+                            <button id="followings-prev" class="btn btn-ghost" type="button">上一页</button>
+                            <span id="followings-page-label">第 1 页</span>
+                            <button id="followings-next" class="btn btn-ghost" type="button">下一页</button>
+                        </div>
+                    </section>
+
+                    <section id="favorites-panel" class="panel">
+                        <div class="section-head">
+                            <div>
+                                <h3>收藏夹</h3>
+                                <p>先选择收藏夹，再分页查看资源；支持关键词搜索和勾选删除。</p>
+                            </div>
+                            <div class="button-row">
+                                <button id="load-folders-btn" class="btn btn-primary" type="button">加载收藏夹</button>
+                                <button id="delete-favorites-btn" class="btn btn-danger" type="button" disabled>删除所选资源</button>
+                            </div>
+                        </div>
+                        <div class="split-layout">
+                            <div class="side-list" id="folders-list"></div>
+                            <div>
+                                <div class="toolbar">
+                                    <label>关键词<input id="favorite-keyword" type="search" placeholder="标题 / UP 主"></label>
+                                    <button id="search-favorites-btn" class="btn btn-secondary" type="button">搜索</button>
+                                </div>
+                                <div class="resource-list" id="favorite-items"></div>
+                                <div class="pager">
+                                    <button id="favorites-prev" class="btn btn-ghost" type="button">上一页</button>
+                                    <span id="favorites-page-label">第 1 页</span>
+                                    <button id="favorites-next" class="btn btn-ghost" type="button">下一页</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="dynamics-panel" class="panel">
+                        <div class="section-head">
+                            <div>
+                                <h3>动态</h3>
+                                <p>按游标加载当前账号动态，先预览内容摘要，再删除单条或所选动态。</p>
+                            </div>
+                            <div class="button-row">
+                                <button id="load-dynamics-btn" class="btn btn-primary" type="button">加载动态</button>
+                                <button id="delete-dynamics-btn" class="btn btn-danger" type="button" disabled>删除所选动态</button>
+                            </div>
+                        </div>
+                        <div id="dynamics-list" class="resource-list"></div>
+                        <div class="pager">
+                            <button id="dynamics-more" class="btn btn-ghost" type="button">加载更多</button>
+                        </div>
+                    </section>
+
+                    <section id="history-panel" class="panel">
+                        <div class="section-head">
+                            <div>
+                                <h3>观看历史</h3>
+                                <p>查看最近观看记录，支持单条删除；清空全部历史会要求强确认。</p>
+                            </div>
+                            <div class="button-row">
+                                <button id="load-history-btn" class="btn btn-primary" type="button">加载历史</button>
+                                <button id="clear-history-btn" class="btn btn-danger" type="button">清空全部历史</button>
+                            </div>
+                        </div>
+                        <div id="history-list" class="resource-list"></div>
+                        <div class="pager">
+                            <button id="history-more" class="btn btn-ghost" type="button">加载更多</button>
+                        </div>
+                    </section>
+                </section>
+            </main>
+        </div>
+
+        <aside class="activity-panel">
+            <div class="activity-head">
+                <h3>任务与日志</h3>
+                <button id="clear-log-btn" class="btn btn-ghost" type="button">清空</button>
             </div>
-
-            <!-- 主控制台界面 -->
-            <div id="dashboard-view" class="view hidden">
-                <div class="card user-card">
-                    <div class="user-info">
-                        <span class="label">当前用户UID:</span>
-                        <span id="user-mid" class="value">-</span>
-                    </div>
-                    <button id="logout-btn" class="btn btn-text">退出登录</button>
-                </div>
-
-                <div class="grid-layout">
-                    <!-- 功能控制区 -->
-                    <div class="card actions-card">
-                        <h2>清理选项</h2>
-                        <div class="action-list">
-                            <div class="action-item">
-                                <div class="action-info">
-                                    <h3>清理关注</h3>
-                                    <p>批量取消所有关注的UP主</p>
-                                </div>
-                                <button class="btn btn-primary" onclick="app.clean('followings')">执行</button>
-                            </div>
-                            <div class="action-item">
-                                <div class="action-info">
-                                    <h3>清理收藏</h3>
-                                    <p>批量删除所有收藏夹内的视频</p>
-                                </div>
-                                <button class="btn btn-primary" onclick="app.clean('favorites')">执行</button>
-                            </div>
-                            <div class="action-item">
-                                <div class="action-info">
-                                    <h3>清理动态</h3>
-                                    <p>批量删除发布的动态</p>
-                                </div>
-                                <button class="btn btn-primary" onclick="app.clean('dynamics')">执行</button>
-                            </div>
-                            <div class="action-item">
-                                <div class="action-info">
-                                    <h3>清理历史</h3>
-                                    <p>清空观看历史记录</p>
-                                </div>
-                                <button class="btn btn-primary" onclick="app.clean('history')">执行</button>
-                            </div>
-                            <div class="action-item highlight">
-                                <div class="action-info">
-                                    <h3>一键清理所有</h3>
-                                    <p>同时执行以上所有清理操作</p>
-                                </div>
-                                <button class="btn btn-danger" onclick="app.clean('all')">全部清理</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 进度和日志区 -->
-                    <div class="card log-card">
-                        <div class="log-header">
-                            <h2>执行日志</h2>
-                            <button class="btn btn-small" onclick="app.clearLog()">清空日志</button>
-                        </div>
-                        <div class="progress-bar" id="progress-bar">
-                            <div class="progress-bar-fill" id="progress-fill"></div>
-                        </div>
-                        <div id="log-container" class="log-container">
-                            <div class="log-placeholder">准备就绪，等待指令...</div>
-                        </div>
-                    </div>
-                </div>
+            <div id="task-list" class="task-list">
+                <p class="empty-state">暂无任务</p>
             </div>
-        </main>
-
-        <footer>
-            <p>本工具仅供学习交流使用，请谨慎操作数据。</p>
-        </footer>
+            <div id="log-container" class="log-container">
+                <div class="log-placeholder">准备就绪，等待指令...</div>
+            </div>
+        </aside>
     </div>
+
+    <div id="confirm-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="modal">
+            <h3 id="confirm-title">确认操作</h3>
+            <p id="confirm-message"></p>
+            <input id="confirm-input" class="hidden" type="text" autocomplete="off">
+            <div class="modal-actions">
+                <button id="confirm-cancel" class="btn btn-ghost" type="button">取消</button>
+                <button id="confirm-ok" class="btn btn-danger" type="button">确认执行</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
