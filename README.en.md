@@ -77,6 +77,26 @@ Then open:
 - Swagger UI: `http://localhost:8000/docs`
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
 
+## Web UI Screenshots
+
+The Web UI is a local account cleanup console, not just a set of wipe buttons. It lets regular users scan to log in, preview lists, filter candidates, delete selected items, tag followings for manual review, and watch async task progress. The CLI, HTTP API, and AI-agent workflows continue to share the same backend service layer.
+
+> Screenshots use sanitized demo data. They do not contain real account IDs, names, cookies, or cleanup records.
+
+![Bilibili Cleaner Web dashboard](docs/assets/web-dashboard.png)
+
+![Bilibili Cleaner following audit](docs/assets/web-followings-audit.png)
+
+## Web UI Workflow
+
+1. Start the service and open `http://localhost:8000`.
+2. Scan the QR code with the Bilibili mobile app.
+3. Use the Followings, Favorites, Dynamics, and History workspaces to load and review data.
+4. Filter and select candidates before running destructive actions.
+5. For followings, prefer tagging candidates into `to-review` first, then manually review them in Bilibili before unfollowing.
+6. Large unfollow batches run as async tasks and can be tracked in the task panel.
+7. Click "logout" when finished to clear Web credentials from browser localStorage.
+
 ## CLI
 
 ```bash

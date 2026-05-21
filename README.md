@@ -101,16 +101,27 @@ Windows PowerShell 激活虚拟环境：
 - Swagger / OpenAPI UI: `http://localhost:8000/docs`
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
 
+## Web UI 截图 / Screenshots
+
+Web UI 现在是一个可独立使用的本地清理控制台，不再只是“一键清空”入口。它适合普通用户在浏览器里完成扫码登录、列表预览、筛选候选、选择性删除、关注分组复核和异步任务进度查看；CLI、HTTP API 和 AI Agent 仍然共享同一套后端服务层，适合更高级的自动化流程。
+
+> 截图使用脱敏演示数据，不包含真实账号 UID、昵称、Cookie 或清理记录。
+
+![Bilibili Cleaner Web dashboard](docs/assets/web-dashboard.png)
+
+![Bilibili Cleaner following audit](docs/assets/web-followings-audit.png)
+
 ## Web UI 使用流程
 
 1. 启动服务并打开 `http://localhost:8000`。
 2. 使用哔哩哔哩 App 扫描页面二维码。
 3. 手机端确认登录后，页面会显示当前 UID。
-4. 选择清理关注、收藏、动态、历史，或执行“一键清理所有”。
-5. 操作前会二次确认，执行日志会在页面中显示。
-6. 完成后点击“退出登录”，清除浏览器 localStorage 中的登录凭证。
+4. 在“关注审计、收藏夹、动态、观看历史”工作区加载列表并筛选候选项。
+5. 对关注账号可先加入 `to-review` 分组，在 B 站 App 或网页中人工复核后再取关。
+6. 对收藏、动态、观看历史执行选择性删除；大批量关注取关会创建异步任务并在右侧任务面板显示进度。
+7. 完成后点击“退出登录”，清除浏览器 localStorage 中的登录凭证。
 
-Web UI 适合快速清空；如果要先筛选、复核、分批删除，优先使用 CLI 或 `/api/v2/*` API。
+Web UI 适合可视化审计和人工确认；CLI 适合批处理脚本；`/api/v2/*` API 和 `openapi.json` 适合 AI Agent 或内部系统编排。三者互不冲突。
 
 ## CLI 用法 / Command Line
 
