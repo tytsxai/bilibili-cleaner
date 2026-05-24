@@ -128,6 +128,16 @@ This project is a local tool, not a hosted service. Web credentials are stored i
 
 Bilibili account cleanup, Bilibili cleaner, Bilibili bulk unfollow, clear Bilibili favorites, delete Bilibili dynamics, clear Bilibili watch history, self-hosted privacy tool, FastAPI Bilibili API, Bilibili CLI, AI agent OpenAPI integration.
 
+## Star History
+
+If this project is useful to you, a star helps others discover it. Star History is only an open-source visibility signal and does not imply any affiliation with Bilibili.
+
+<p align="center">
+  <a href="https://star-history.com/#tytsxai/bilibili-cleaner&Date">
+    <img src="https://api.star-history.com/svg?repos=tytsxai/bilibili-cleaner&type=Date" alt="Star History" width="760" />
+  </a>
+</p>
+
 ## License
 
 MIT © 2024-2026. This project is not affiliated with Bilibili.

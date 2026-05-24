@@ -253,6 +253,16 @@ fastapi, typer, cli-tool, self-hosted, openapi, ai-agent, data-cleanup
 
 这些关键词描述的是项目真实能力，不代表官方背书或与哔哩哔哩存在关联。
 
+## Star History
+
+如果这个项目对你有帮助，欢迎 star。Star History 用于观察开源关注度变化，不代表项目与哔哩哔哩官方存在任何关联。
+
+<p align="center">
+  <a href="https://star-history.com/#tytsxai/bilibili-cleaner&Date">
+    <img src="https://api.star-history.com/svg?repos=tytsxai/bilibili-cleaner&type=Date" alt="Star History" width="760" />
+  </a>
+</p>
+
 ## 致谢 / Acknowledgments
 
 - [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect) — B 站 API 参考。
