@@ -9,7 +9,24 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/tytsxai/bilibili-cleaner)](https://github.com/tytsxai/bilibili-cleaner/releases)
 
-[English README](README.en.md) · [API 文档](docs/API.md) · [FAQ](docs/FAQ.md) · [llms.txt](llms.txt) · [Changelog](CHANGELOG.md) · [Issues](https://github.com/tytsxai/bilibili-cleaner/issues)
+[English README](README.en.md) · [文档总览](docs/README.md) · [API 文档](docs/API.md) · [FAQ](docs/FAQ.md) · [llms.txt](llms.txt) · [Changelog](CHANGELOG.md) · [Issues](https://github.com/tytsxai/bilibili-cleaner/issues)
+
+## 一句话定位 / TL;DR
+
+**Bilibili Cleaner = 本地运行的 B 站账号清理工作台。** 它把“列出账号数据 → 本地筛选 → 人工复核 → 选择性删除”的流程做成 Web UI、HTTP API 和 CLI，适合清理自己的关注、收藏夹、动态和观看历史，也适合开发者或 AI Agent 通过 OpenAPI 编排安全的批量清理任务。
+
+English: **Bilibili Cleaner is a local-first, self-hosted Bilibili account cleanup toolkit** for users, developers, scripts, and AI agents that need structured listing, enrichment, review, selective deletion, and async task polling.
+
+## 目录 / Contents
+
+- [项目定位 / What It Is](#项目定位--what-it-is)
+- [核心功能 / Core Features](#核心功能--core-features)
+- [快速开始 / Quick Start](#快速开始--quick-start)
+- [Web UI 使用流程](#web-ui-使用流程)
+- [CLI 用法 / Command Line](#cli-用法--command-line)
+- [HTTP API / AI Agent 接入](#http-api--ai-agent-接入)
+- [重要限制 / Limitations](#重要限制--limitations)
+- [安全与隐私 / Security and Privacy](#安全与隐私--security-and-privacy)
 
 ## 项目定位 / What It Is
 
@@ -21,6 +38,16 @@
 | 技术栈 / Stack | Python 3.10+、FastAPI、httpx、Typer、Pydantic、原生 HTML/CSS/JavaScript、Docker Compose |
 | 运行方式 / Runtime | 本地 Python、Docker、自托管服务；默认端口 `8000` |
 | 数据流向 / Data Flow | 登录凭证保存在本地，API 请求从你的机器直接访问 bilibili.com，不经过第三方服务器 |
+
+## 文档阅读路径 / Reading Path
+
+| 你想做什么 | 优先阅读 |
+|---|---|
+| 先判断项目是否适合自己 | 本 README 的“项目定位”“核心功能”“重要限制” |
+| 快速启动 Web UI | [快速开始](#快速开始--quick-start) |
+| 用脚本或 Agent 接入 | [docs/API.md](docs/API.md)、[openapi.json](openapi.json)、[llms.txt](llms.txt) |
+| 排查登录、限流、风控、任务状态 | [docs/FAQ.md](docs/FAQ.md) |
+| 了解文档体系和维护入口 | [docs/README.md](docs/README.md) |
 
 ## 核心功能 / Core Features
 
@@ -41,6 +68,15 @@
 - 不想把 Cookie 或账号凭证交给第三方工具，希望本地自部署、可审计。
 - 先导出列表并按规则筛选，例如“半年未更新且粉丝数较低的关注账号”。
 - 给 AI Agent、脚本或内部工具提供稳定的 Bilibili 账号清理 API。
+
+## 与其他清理方式对比 / Comparison
+
+| 方案 | 适合场景 | 主要风险或限制 |
+|---|---|---|
+| 手动在 B 站网页/App 删除 | 少量内容、偶尔整理 | 点击成本高，难以按规则筛选和复核 |
+| 浏览器脚本或临时脚本 | 单一页面、一次性操作 | 可维护性和风控处理通常较弱，接口变化后容易失效 |
+| 闭源第三方清理工具 | 追求开箱即用 | 凭证流向不透明，难以审计实际操作 |
+| **Bilibili Cleaner** | 本地自托管、可审计、需要 API/CLI/Agent 工作流 | 需要自己启动服务；删除不可恢复；仍受 B 站接口和风控限制 |
 
 ## 重要限制 / Limitations
 
@@ -208,6 +244,7 @@ bilibili-cleaner/
 ├── README.en.md              # English README
 ├── llms.txt                  # AI search / LLM-friendly project summary
 ├── docs/
+│   ├── README.md             # 文档总览与阅读路径
 │   ├── API.md                # HTTP API + CLI reference
 │   └── FAQ.md                # FAQ and troubleshooting
 ├── openapi.json              # OpenAPI snapshot

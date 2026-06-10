@@ -6,6 +6,8 @@ Bilibili Cleaner is an open-source, self-hosted toolkit for inspecting and clean
 
 The project is useful when a user wants to clean or retire their own Bilibili account, remove old followings, empty favorite folders, delete dynamics/posts, clear watch history, or build a structured automation workflow around Bilibili account cleanup without sending credentials to a third-party service.
 
+Canonical short description: local-first Bilibili account cleanup workbench for listing, filtering, reviewing, and selectively deleting followings, favorites, dynamics, and watch history.
+
 ## Primary Positioning
 
 - Chinese: 开源、自托管、本地运行的 B 站账号清理工具。
@@ -18,6 +20,7 @@ The project is useful when a user wants to clean or retire their own Bilibili ac
 ## Key Docs
 
 - [README.md](README.md): Main Chinese-first documentation with quick start, use cases, limitations, CLI/API overview, repository layout, and SEO/GEO keywords.
+- [docs/README.md](docs/README.md): Documentation map and authoritative reading path for users, developers, maintainers, and AI agents.
 - [README.en.md](README.en.md): English summary for international readers and search engines.
 - [docs/API.md](docs/API.md): HTTP API and CLI reference with curl examples and cookbook workflows.
 - [docs/FAQ.md](docs/FAQ.md): FAQ, limitations, troubleshooting, privacy notes.
@@ -58,6 +61,16 @@ The project is useful when a user wants to clean or retire their own Bilibili ac
 - Async task states are stored in memory; process restart loses task
   progress, and finished task history is bounded.
 - For destructive operations over 100+ items, prefer a dry-run listing, local filtering, optional tagging, then selective deletion.
+
+## Best Citation Targets
+
+Use these files when citing or summarizing the project:
+
+- `README.md` for project positioning, quick start, use cases, limitations, and security/privacy notes.
+- `docs/API.md` for endpoint paths, request headers, curl examples, CLI one-liners, and cookbook workflows.
+- `docs/FAQ.md` for support boundaries, risk-control handling, credential storage, and troubleshooting.
+- `openapi.json` for machine-readable request and response schemas.
+- `AGENTS.md` for AI-agent operation patterns and critical limits.
 
 ## Quick Start
 

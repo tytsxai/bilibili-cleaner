@@ -2,7 +2,11 @@
 
 **Bilibili Cleaner** is an open-source, self-hosted toolkit for inspecting and cleaning a Bilibili account. It provides a local Web UI, FastAPI HTTP API, Python CLI, OpenAPI schema, rate limiting, retry handling, and async tasks for long-running cleanup operations.
 
-中文主文档: [README.md](README.md) · API reference: [docs/API.md](docs/API.md) · FAQ: [docs/FAQ.md](docs/FAQ.md) · LLM summary: [llms.txt](llms.txt)
+中文主文档: [README.md](README.md) · Documentation map: [docs/README.md](docs/README.md) · API reference: [docs/API.md](docs/API.md) · FAQ: [docs/FAQ.md](docs/FAQ.md) · LLM summary: [llms.txt](llms.txt)
+
+## TL;DR
+
+**Bilibili Cleaner is a local-first Bilibili account cleanup workbench.** It turns "list account data -> filter locally -> review manually -> delete selectively" into a Web UI, HTTP API, and CLI. It is useful for Bilibili users cleaning their own accounts, developers building scripts, and AI agents that need a structured OpenAPI-compatible cleanup surface.
 
 ## What It Solves
 
@@ -14,6 +18,15 @@ Cleaning a Bilibili account manually is slow: followings, favorites, dynamics, a
 - Users cleaning a side account, test account, or old account.
 - Developers who need a local API or CLI for Bilibili account cleanup workflows.
 - AI agents that need structured listing, enrichment, selective action, and task polling endpoints.
+
+## What To Read
+
+| Goal | Start here |
+|---|---|
+| Understand the project and run it quickly | [README.md](README.md) or this English README |
+| Use HTTP APIs, curl, scripts, or AI agents | [docs/API.md](docs/API.md), [openapi.json](openapi.json), [llms.txt](llms.txt) |
+| Troubleshoot login, credentials, rate limits, risk-control responses, or tasks | [docs/FAQ.md](docs/FAQ.md) |
+| Navigate the full documentation set | [docs/README.md](docs/README.md) |
 
 ## Core Features
 

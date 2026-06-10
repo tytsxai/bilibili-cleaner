@@ -1,6 +1,6 @@
 # Bilibili Cleaner FAQ / 常见问题
 
-本文补充 [README.md](../README.md) 和 [API.md](API.md)，面向第一次使用 Bilibili Cleaner 的用户、开发者和 AI Agent。
+本文补充 [README.md](../README.md)、[docs/README.md](README.md) 和 [API.md](API.md)，面向第一次使用 Bilibili Cleaner 的用户、开发者和 AI Agent。
 
 ## 基础定位
 
@@ -91,7 +91,7 @@ B 站没有真正的批量取关接口，底层只能逐个 `fid` 调用。项�
 
 ### 最适合 AI Agent 的入口是什么？
 
-先读 [AGENTS.md](../AGENTS.md)、[llms.txt](../llms.txt) 和 [docs/API.md](API.md)。机器可读 schema 是 [openapi.json](../openapi.json)。
+先读 [AGENTS.md](../AGENTS.md)、[llms.txt](../llms.txt)、[docs/README.md](README.md) 和 [docs/API.md](API.md)。机器可读 schema 是 [openapi.json](../openapi.json)。
 
 ### 推荐的安全删除流程是什么？
 
