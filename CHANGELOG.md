@@ -2,6 +2,14 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/) 规范，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 文档
+- 优化 README 首屏定位、阅读路径、使用场景和方案对比，提升传统搜索引擎与 AI 搜索引擎理解度。
+- 新增 `docs/README.md` 文档总览，串联 README、API、FAQ、OpenAPI、llms 和 Agent 使用边界。
+- 修正 `docs/API.md` 中 curl 鉴权示例和 cookbook 的可执行性，统一使用双请求头数组。
+- 补充 `llms.txt` 的权威引用入口和机器可读摘要，并扩充 `pyproject.toml` 项目关键词。
+
 ## [1.1.1] - 2026-05-19
 
 ### 文档
