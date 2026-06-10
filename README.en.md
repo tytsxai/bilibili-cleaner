@@ -32,8 +32,8 @@ Cleaning a Bilibili account manually is slow: followings, favorites, dynamics, a
 - Deleted data cannot be recovered.
 - Bilibili has no reliable public API for "list comments I posted", so this project does not delete posted comments.
 - Private messages, fans, bangumi follows, and watch-later are outside the current scope.
-- Bilibili has no real batch-unfollow endpoint; this project unfollows one account at a time with rate limiting.
-- Task state is in memory. Restarting the service loses task progress.
+- Bilibili has no real batch-unfollow endpoint; this project unfollows one account at a time with a shared in-process rate limit.
+- Task state is in memory. Restarting the service loses task progress, and finished task history is bounded.
 - The tool only operates on the account that logged in.
 
 ## Quick Start
@@ -76,6 +76,10 @@ Then open:
 - Web UI: `http://localhost:8000`
 - Swagger UI: `http://localhost:8000/docs`
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
+
+The Web UI submits async tasks for followings, favorites, dynamics, and
+"clean all", then polls real task progress. Watch history clear is a single
+synchronous Bilibili call.
 
 ## CLI
 

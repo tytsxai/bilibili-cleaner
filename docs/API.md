@@ -22,9 +22,10 @@ All examples assume the server is running at `http://localhost:8000`
   store.
 - Response envelope on error:
   `{"error": "...", "code": <int|null>, "data": <any|null>}`.
-- Rate limit: default 1.5 req/s shared across the client. Auto-retry on
-  risk-control codes (`-352`, `-799`, `-509`, HTTP 412/429) with
-  exponential backoff (max 3 attempts).
+- Rate limit: default 1.5 req/s shared by all `BiliApiClient` instances
+  in the same server process / event loop. Auto-retry on risk-control
+  codes (`-352`, `-799`, `-509`, HTTP 412/429) with exponential backoff
+  (max 3 attempts). Multiple OS processes have separate buckets.
 - For listings the response shape mirrors B 站's `data` field unless an
   explicit pydantic model documents otherwise — open `/docs` (Swagger)
   or [`openapi.json`](../openapi.json) for the exact shape.
@@ -168,6 +169,10 @@ Task state shape:
   "finished_at": null
 }
 ```
+
+Task state is in-memory and process-local. A restart loses running task
+progress; finished task history is automatically bounded so long-running
+services do not retain every historical task forever.
 
 ## Cookbooks
 

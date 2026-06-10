@@ -200,6 +200,99 @@ const app = {
 
     // --- Cleaning Logic ---
 
+    authHeaders: function() {
+        return {
+            'SESSDATA': this.state.user.sessdata,
+            'bili_jct': this.state.user.bili_jct
+        };
+    },
+
+    requestJson: async function(endpoint, options = {}) {
+        const res = await fetch(endpoint, options);
+        const text = await res.text();
+        let payload = {};
+        if (text) {
+            try {
+                payload = JSON.parse(text);
+            } catch (err) {
+                payload = { error: text };
+            }
+        }
+        if (!res.ok) {
+            throw new Error(payload.error || payload.message || `HTTP ${res.status}`);
+        }
+        return payload;
+    },
+
+    delay: function(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    },
+
+    pollTask: async function(taskId) {
+        let lastProgress = '';
+        while (true) {
+            const task = await this.requestJson(`/api/v2/tasks/${encodeURIComponent(taskId)}`, {
+                headers: this.authHeaders()
+            });
+            this.updateTaskProgress(task);
+
+            const currentProgress = `${task.processed || 0}/${task.total || '?'}`;
+            if (currentProgress !== lastProgress) {
+                this.log(`任务进度: ${task.status} ${currentProgress}`, 'info');
+                lastProgress = currentProgress;
+            }
+
+            if (!['pending', 'running'].includes(task.status)) {
+                return task;
+            }
+            await this.delay(3000);
+        }
+    },
+
+    updateTaskProgress: function(task) {
+        const fill = document.getElementById('progress-fill');
+        fill.dataset.mode = 'determinate';
+        const processed = Number(task.processed || 0);
+        const total = Number(task.total || 0);
+        if (total > 0) {
+            fill.style.width = Math.min(100, Math.round((processed / total) * 100)) + '%';
+        } else if (processed > 0) {
+            fill.style.width = '90%';
+        }
+    },
+
+    logTaskCompletion: function(type, task) {
+        const result = task.result || {};
+        if (task.status !== 'completed') {
+            const errors = Array.isArray(task.errors) ? task.errors : [];
+            if (errors.length) {
+                this.log(`任务失败，错误数: ${errors.length}`, 'error');
+            }
+            throw new Error(`任务状态: ${task.status}`);
+        }
+
+        if (type === 'all') {
+            const followings = Number(result.followings || 0);
+            const favorites = Number(result.favorites || 0);
+            const dynamics = Number(result.dynamics || 0);
+            const history = Number(result.history || 0);
+            const total = followings + favorites + dynamics + history;
+            this.log(`全部清理完成! 总计: ${total}`, 'success');
+            this.log(`详情: 关注-${followings}, 收藏-${favorites}, 动态-${dynamics}, 历史-${history}`, 'success');
+        } else {
+            const ok = Number(result.ok || task.processed || 0);
+            this.log(`清理完成! 成功处理数量: ${ok}`, 'success');
+        }
+
+        if (result.stopped_reason) {
+            this.log(`任务提前停止: ${result.stopped_reason}`, 'error');
+        }
+        const errors = Array.isArray(task.errors) ? task.errors : [];
+        if (errors.length) {
+            this.log(`部分项目处理失败，错误数: ${errors.length}`, 'error');
+        }
+    },
+
     clean: async function(type) {
         if (this.state.isProcessing) return;
         
@@ -217,34 +310,42 @@ const app = {
         this.log(`开始执行任务: ${type}...`, 'info');
 
         try {
-            const endpoint = `/api/clean/${type}`;
-            const headers = {
-                'Content-Type': 'application/json',
-                'SESSDATA': this.state.user.sessdata,
-                'bili_jct': this.state.user.bili_jct
-            };
-            
-            const body = (type === 'history') ? null : JSON.stringify({ mid: parseInt(this.state.user.mid) });
-
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: headers,
-                body: body
-            });
-
-            const result = await res.json();
-
-            if (res.ok && result.success) {
-                if (type === 'all') {
-                    const c = result.counts;
-                    this.log(`全部清理完成! 总计: ${result.total}`, 'success');
-                    this.log(`详情: 关注-${c.followings}, 收藏-${c.favorites}, 动态-${c.dynamics}, 历史-${c.history}`, 'success');
-                } else {
-                    this.log(`清理完成! 成功处理数量: ${result.count}`, 'success');
-                }
-            } else {
-                this.log(`任务失败: ${result.error || result.message || 'Unknown error'}`, 'error');
+            const mid = parseInt(this.state.user.mid, 10);
+            if (!Number.isFinite(mid)) {
+                throw new Error('当前用户 UID 无效，请重新登录');
             }
+
+            if (type === 'history') {
+                const result = await this.requestJson('/api/v2/history/clear', {
+                    method: 'POST',
+                    headers: this.authHeaders()
+                });
+                this.log(`清理完成! 成功处理数量: ${result.count || 1}`, 'success');
+                return;
+            }
+
+            const endpoints = {
+                followings: `/api/v2/followings/clear?mid=${encodeURIComponent(mid)}`,
+                favorites: `/api/v2/favorites/clear?mid=${encodeURIComponent(mid)}`,
+                dynamics: `/api/v2/dynamics/clear?mid=${encodeURIComponent(mid)}`,
+                all: `/api/v2/tasks/clean-all?mid=${encodeURIComponent(mid)}`
+            };
+            const endpoint = endpoints[type];
+            if (!endpoint) {
+                throw new Error(`未知任务类型: ${type}`);
+            }
+
+            const ack = await this.requestJson(endpoint, {
+                method: 'POST',
+                headers: this.authHeaders()
+            });
+            if (!ack.task_id) {
+                throw new Error('任务创建失败：响应缺少 task_id');
+            }
+
+            this.log(`任务已提交: ${ack.task_id}`, 'info');
+            const task = await this.pollTask(ack.task_id);
+            this.logTaskCompletion(type, task);
 
         } catch (err) {
             console.error(err);
@@ -264,6 +365,7 @@ const app = {
         });
 
         if (processing) {
+            progressFill.dataset.mode = 'indeterminate';
             progressBar.classList.add('active');
             this.animateProgress();
         } else {
@@ -280,6 +382,7 @@ const app = {
         let width = 0;
         const animate = () => {
             if (!this.state.isProcessing) return;
+            if (fill.dataset.mode === 'determinate') return;
             width = Math.min(width + Math.random() * 15, 90);
             fill.style.width = width + '%';
             setTimeout(animate, 300 + Math.random() * 500);

@@ -47,8 +47,10 @@ Poll roughly every 5–10 seconds. Worst case for 1600 unfollows: ~18 min.
 - **No batch unfollow on B 站's side.** `/x/relation/modify` only takes
   one `fid` at a time. The "batch" endpoints in this project loop with
   rate-limiting underneath.
-- **Default rate is 1.5 req/s.** This is per-`BiliApiClient`-instance.
-  Don't open multiple clients to circumvent it — you'll trip risk control.
+- **Default rate is 1.5 req/s.** It is shared by all `BiliApiClient`
+  instances inside the same server process / event loop. Multiple OS
+  processes still have separate buckets, so don't scale workers to
+  circumvent it — you'll trip risk control.
 - **B 站 has no "list my comments" API.** Don't propose deleting the
   user's comments; it's not possible.
 - **Watch history `clear` is a single call.** Other `/clear` endpoints
@@ -56,6 +58,7 @@ Poll roughly every 5–10 seconds. Worst case for 1600 unfollows: ~18 min.
 - **Credentials live in the request.** Send `SESSDATA` and `bili_jct` as
   HTTP headers (NOT cookies). 401 if missing.
 - **Tasks are in-memory.** Process restart loses task state and progress.
+  Finished task history is bounded to avoid long-running process growth.
   Acceptable for tasks under ~30 min.
 - **All deletes are permanent.** B 站 has no undo. Always offer a dry-run
   list to the user before calling write endpoints with 100+ items.

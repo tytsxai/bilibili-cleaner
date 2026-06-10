@@ -52,9 +52,11 @@ The project is useful when a user wants to clean or retire their own Bilibili ac
 
 - Deletes are permanent and cannot be undone.
 - Bilibili has no real batch-unfollow endpoint; the project loops one `fid` at a time.
-- The default API client rate is approximately `1.5 req/s`.
+- The default API client rate is approximately `1.5 req/s`, shared by
+  all clients in the same server process / event loop.
 - Risk-control responses such as `-352`, `-799`, HTTP `412`, and HTTP `429` are retried with backoff, but callers should still slow down when they occur.
-- Async task states are stored in memory; process restart loses task progress.
+- Async task states are stored in memory; process restart loses task
+  progress, and finished task history is bounded.
 - For destructive operations over 100+ items, prefer a dry-run listing, local filtering, optional tagging, then selective deletion.
 
 ## Quick Start
