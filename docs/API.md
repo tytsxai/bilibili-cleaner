@@ -46,6 +46,15 @@ Credentials persist at `~/.bilibili-cleaner/credentials.json` (override
 with `$BILI_CREDENTIALS_PATH`) or via `$BILI_SESSDATA` + `$BILI_JCT` env
 vars.
 
+For curl examples, use a Bash/Zsh header array so both auth headers are
+sent every time:
+
+```bash
+export BILI_SESSDATA="..."
+export BILI_JCT="..."
+AUTH=(-H "SESSDATA: $BILI_SESSDATA" -H "bili_jct: $BILI_JCT")
+```
+
 ## Endpoint reference
 
 > Authoritative schemas live in [`/openapi.json`](../openapi.json). Below
@@ -54,17 +63,16 @@ vars.
 ### Identity
 
 ```bash
-curl -H "SESSDATA: $S" -H "bili_jct: $J" \
-  http://localhost:8000/api/v2/me
+curl "${AUTH[@]}" http://localhost:8000/api/v2/me
 # → {"isLogin": true, "mid": 12345, "uname": "tester", "raw": {…}}
 ```
 
 ### Users (any UP)
 
 ```bash
-curl -H "$AUTH" http://localhost:8000/api/v2/users/12345
-curl -H "$AUTH" http://localhost:8000/api/v2/users/12345/stat
-curl -H "$AUTH" 'http://localhost:8000/api/v2/users/12345/videos?page=1&page_size=1&order=pubdate'
+curl "${AUTH[@]}" http://localhost:8000/api/v2/users/12345
+curl "${AUTH[@]}" http://localhost:8000/api/v2/users/12345/stat
+curl "${AUTH[@]}" 'http://localhost:8000/api/v2/users/12345/videos?page=1&page_size=1&order=pubdate'
 ```
 
 `videos` returns `data.list.vlist[].pubdate` — use page_size=1 to cheaply
@@ -74,84 +82,84 @@ check "last upload time" for an activity filter.
 
 ```bash
 # list one page (basic)
-curl -H "$AUTH" \
+curl "${AUTH[@]}" \
   'http://localhost:8000/api/v2/followings?mid=12345&page=1&page_size=50'
 
 # list with enrichment (profile + stat + latest video)
-curl -H "$AUTH" \
+curl "${AUTH[@]}" \
   'http://localhost:8000/api/v2/followings?mid=12345&with_detail=true&concurrency=3'
 
 # inspect one UP
-curl -H "$AUTH" http://localhost:8000/api/v2/followings/9999
+curl "${AUTH[@]}" http://localhost:8000/api/v2/followings/9999
 
 # selective unfollow (sync; OK for small batches)
-curl -H "$AUTH" -H 'Content-Type: application/json' \
+curl "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d '{"mids":[101,102,103]}' \
   http://localhost:8000/api/v2/followings/unfollow
 
 # selective unfollow (async; recommended >50 mids)
-curl -H "$AUTH" -H 'Content-Type: application/json' \
+curl "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d '{"mids":[…]}' \
   http://localhost:8000/api/v2/followings/unfollow-task
 # → {"task_id": "abc…"}
 
 # clear ALL (async)
-curl -X POST -H "$AUTH" \
+curl -X POST "${AUTH[@]}" \
   'http://localhost:8000/api/v2/followings/clear?mid=12345'
 ```
 
 ### Favorites
 
 ```bash
-curl -H "$AUTH" 'http://localhost:8000/api/v2/favorites/folders?mid=12345'
-curl -H "$AUTH" 'http://localhost:8000/api/v2/favorites/folders/9876/items?page=1'
-curl -H "$AUTH" -H 'Content-Type: application/json' \
+curl "${AUTH[@]}" 'http://localhost:8000/api/v2/favorites/folders?mid=12345'
+curl "${AUTH[@]}" 'http://localhost:8000/api/v2/favorites/folders/9876/items?page=1'
+curl "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d '{"resources":[{"id":111,"type":2},{"id":222,"type":2}]}' \
   http://localhost:8000/api/v2/favorites/folders/9876/delete
-curl -X POST -H "$AUTH" 'http://localhost:8000/api/v2/favorites/clear?mid=12345'
+curl -X POST "${AUTH[@]}" 'http://localhost:8000/api/v2/favorites/clear?mid=12345'
 ```
 
 ### Dynamics
 
 ```bash
-curl -H "$AUTH" 'http://localhost:8000/api/v2/dynamics?mid=12345'
-curl -H "$AUTH" 'http://localhost:8000/api/v2/dynamics?mid=12345&offset=<from-prev>'
-curl -H "$AUTH" -H 'Content-Type: application/json' \
+curl "${AUTH[@]}" 'http://localhost:8000/api/v2/dynamics?mid=12345'
+curl "${AUTH[@]}" 'http://localhost:8000/api/v2/dynamics?mid=12345&offset=<from-prev>'
+curl "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d '{"ids":["100","101"]}' \
   http://localhost:8000/api/v2/dynamics/delete
-curl -X POST -H "$AUTH" 'http://localhost:8000/api/v2/dynamics/clear?mid=12345'
+curl -X POST "${AUTH[@]}" 'http://localhost:8000/api/v2/dynamics/clear?mid=12345'
 ```
 
 ### History
 
 ```bash
-curl -H "$AUTH" 'http://localhost:8000/api/v2/history?max_id=0&page_size=20'
-curl -X POST -H "$AUTH" \
+curl "${AUTH[@]}" 'http://localhost:8000/api/v2/history?max_id=0&page_size=20'
+curl -X POST "${AUTH[@]}" \
   'http://localhost:8000/api/v2/history/delete?kid=archive_12345'
-curl -X POST -H "$AUTH" http://localhost:8000/api/v2/history/clear
+curl -X POST "${AUTH[@]}" http://localhost:8000/api/v2/history/clear
 ```
 
 ### Relation tags (following groups)
 
 ```bash
-curl -H "$AUTH" http://localhost:8000/api/v2/relation/tags
-curl -H "$AUTH" -H 'Content-Type: application/json' \
+curl "${AUTH[@]}" http://localhost:8000/api/v2/relation/tags
+curl "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d '{"name":"to-review"}' \
   http://localhost:8000/api/v2/relation/tags
-curl -H "$AUTH" -H 'Content-Type: application/json' \
+curl "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d '{"mids":[1,2,3],"tag_name":"to-review"}' \
   http://localhost:8000/api/v2/relation/tags/members
-curl -H "$AUTH" 'http://localhost:8000/api/v2/relation/tags/5/users?page=1'
-curl -X DELETE -H "$AUTH" http://localhost:8000/api/v2/relation/tags/5
+curl "${AUTH[@]}" 'http://localhost:8000/api/v2/relation/tags/5/users?page=1'
+curl -X DELETE "${AUTH[@]}" http://localhost:8000/api/v2/relation/tags/5
 ```
 
 ### Tasks
 
 ```bash
-curl -H "$AUTH" http://localhost:8000/api/v2/tasks
-curl -H "$AUTH" http://localhost:8000/api/v2/tasks/<task_id>
-curl -X DELETE -H "$AUTH" http://localhost:8000/api/v2/tasks/<task_id>
-curl -X POST -H "$AUTH" \
+curl "${AUTH[@]}" http://localhost:8000/api/v2/tasks
+curl "${AUTH[@]}" http://localhost:8000/api/v2/tasks/<task_id>
+curl -X DELETE "${AUTH[@]}" http://localhost:8000/api/v2/tasks/<task_id>
+curl -X POST "${AUTH[@]}" \
   'http://localhost:8000/api/v2/tasks/clean-all?mid=12345'
 ```
 
@@ -180,34 +188,36 @@ services do not retain every historical task forever.
 
 ```bash
 # 1. get my mid
-MID=$(curl -s -H "$AUTH" http://localhost:8000/api/v2/me | jq -r '.mid')
+MID=$(curl -s "${AUTH[@]}" http://localhost:8000/api/v2/me | jq -r '.mid')
 
-# 2. dump all followings (no detail) to local
-curl -s -H "$AUTH" \
-  "http://localhost:8000/api/v2/followings?mid=$MID&page=1&page_size=50&with_detail=false" \
-  | jq '.items[] | {mid, uname}' > all-followings.json
-# (loop pages until items length < page_size)
+# 2. dump all followings to a local JSON array.
+# The CLI uses the same service layer; for pure HTTP, loop GET /followings pages until items < page_size.
+bilibili-cleaner followings all --mid "$MID" --json > all-followings.json
 
 # 3. for each mid: cheap "last upload" + follower count
 for m in $(jq -r '.[].mid' all-followings.json); do
-  STAT=$(curl -s -H "$AUTH" "http://localhost:8000/api/v2/users/$m/stat")
-  VID=$(curl -s -H "$AUTH" "http://localhost:8000/api/v2/users/$m/videos?page=1&page_size=1")
+  STAT=$(curl -s "${AUTH[@]}" "http://localhost:8000/api/v2/users/$m/stat")
+  VID=$(curl -s "${AUTH[@]}" "http://localhost:8000/api/v2/users/$m/videos?page=1&page_size=1")
   echo "$m $(jq -r '.follower' <<<"$STAT") $(jq -r '.list.vlist[0].pubdate // 0' <<<"$VID")"
 done > scored.txt
 
-# 4. filter locally (here: <1000 followers and last upload before Nov 2024)
-CUTOFF=$(date -d '6 months ago' +%s)
+# 4. filter locally (here: <1000 followers and last upload older than about 6 months)
+CUTOFF=$(python3 - <<'PY'
+import datetime
+print(int((datetime.datetime.now() - datetime.timedelta(days=183)).timestamp()))
+PY
+)
 awk -v cutoff="$CUTOFF" '$2 < 1000 && $3 < cutoff {print $1}' scored.txt > to-unfollow.txt
 
 # 5. start async unfollow task
 MIDS=$(jq -R . to-unfollow.txt | jq -sc 'map(tonumber)')
-TASK=$(curl -s -H "$AUTH" -H 'Content-Type: application/json' \
+TASK=$(curl -s "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d "{\"mids\": $MIDS}" \
   http://localhost:8000/api/v2/followings/unfollow-task | jq -r .task_id)
 
 # 6. poll
 while :; do
-  S=$(curl -s -H "$AUTH" "http://localhost:8000/api/v2/tasks/$TASK")
+  S=$(curl -s "${AUTH[@]}" "http://localhost:8000/api/v2/tasks/$TASK")
   jq -r '"\(.status) \(.processed)/\(.total)"' <<<"$S"
   [ "$(jq -r .status <<<"$S")" = "running" ] || break
   sleep 5
@@ -226,14 +236,14 @@ bilibili-cleaner followings unfollow $(cat to-unfollow.txt | tr '\n' ' ')
 
 ```bash
 # 1. find the folder id
-curl -s -H "$AUTH" "http://localhost:8000/api/v2/favorites/folders?mid=$MID" \
+curl -s "${AUTH[@]}" "http://localhost:8000/api/v2/favorites/folders?mid=$MID" \
   | jq '.[] | {id, title}'
 
 # 2. page through items collecting short ones
 PAGE=1
 > short.txt
 while :; do
-  DATA=$(curl -s -H "$AUTH" \
+  DATA=$(curl -s "${AUTH[@]}" \
     "http://localhost:8000/api/v2/favorites/folders/9876/items?page=$PAGE&page_size=20")
   echo "$DATA" | jq -r '.medias[] | select(.duration < 60) | "\(.id) \(.type)"' >> short.txt
   COUNT=$(echo "$DATA" | jq '.medias | length')
@@ -243,7 +253,7 @@ done
 
 # 3. batch delete
 RES=$(awk '{print "{\"id\":"$1",\"type\":"$2"}"}' short.txt | jq -sc .)
-curl -X POST -H "$AUTH" -H 'Content-Type: application/json' \
+curl -X POST "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d "{\"resources\": $RES}" \
   http://localhost:8000/api/v2/favorites/folders/9876/delete
 ```
@@ -252,18 +262,18 @@ curl -X POST -H "$AUTH" -H 'Content-Type: application/json' \
 
 ```bash
 # Phase 1: tag candidates
-curl -s -H "$AUTH" -H 'Content-Type: application/json' \
+curl -s "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d '{"mids":[1,2,3,4,5],"tag_name":"to-review"}' \
   http://localhost:8000/api/v2/relation/tags/members
 # user audits via the B 站 app: 关注 → 分组 → to-review
 
 # Phase 2: after manual confirmation, unfollow
-TAG_ID=$(curl -s -H "$AUTH" http://localhost:8000/api/v2/relation/tags \
+TAG_ID=$(curl -s "${AUTH[@]}" http://localhost:8000/api/v2/relation/tags \
   | jq -r '.[] | select(.name=="to-review") | .tagid')
-MIDS=$(curl -s -H "$AUTH" \
+MIDS=$(curl -s "${AUTH[@]}" \
   "http://localhost:8000/api/v2/relation/tags/$TAG_ID/users?page=1&page_size=50" \
   | jq -c '[.[].mid]')
-curl -X POST -H "$AUTH" -H 'Content-Type: application/json' \
+curl -X POST "${AUTH[@]}" -H 'Content-Type: application/json' \
   -d "{\"mids\": $MIDS}" \
   http://localhost:8000/api/v2/followings/unfollow-task
 ```
