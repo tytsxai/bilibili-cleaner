@@ -138,10 +138,12 @@ class FollowingService:
             target_mids = extract_following_mids(data)
             if not target_mids:
                 break
+            page_ok = 0
             for target in target_mids:
                 try:
                     await self._relation_api.unfollow(target)
                     ok += 1
+                    page_ok += 1
                     if on_item is not None:
                         on_item(target, True, None)
                 except Exception as exc:
@@ -150,6 +152,12 @@ class FollowingService:
                     logger.warning("Failed to unfollow mid=%s: %s", target, exc)
                     if on_item is not None:
                         on_item(target, False, err)
+            if page_ok == 0:
+                logger.warning(
+                    "Stopped clear_all for mid=%s after a page made no progress",
+                    mid,
+                )
+                return {"ok": ok, "errors": errors, "stopped_reason": "no_progress"}
             safety += 1
             if safety > 200:
                 break

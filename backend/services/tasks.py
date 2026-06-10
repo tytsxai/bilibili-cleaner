@@ -51,16 +51,20 @@ class TaskState:
 TaskBuilder = Callable[[TaskState], Awaitable[dict[str, Any] | None]]
 
 
+FINAL_STATUSES = frozenset({"completed", "failed", "cancelled"})
+
+
 class TaskRegistry:
     """In-memory registry of long-running async tasks.
 
-    State lives only in the current process; restart loses progress (acceptable
-    for tasks under 30 minutes — see plan-atomic-barto.md).
+    State lives only in the current process; restart loses progress. Finished
+    task history is bounded so a long-running service does not grow forever.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, max_finished: int = 200) -> None:
         self._states: dict[str, TaskState] = {}
         self._tasks: dict[str, asyncio.Task[Any]] = {}
+        self._max_finished = max_finished
 
     def create(
         self,
@@ -71,6 +75,7 @@ class TaskRegistry:
     ) -> TaskState:
         task_id = uuid.uuid4().hex
         state = TaskState(task_id=task_id, kind=kind, total=total)
+        self._prune_finished()
         self._states[task_id] = state
 
         async def runner() -> None:
@@ -91,6 +96,7 @@ class TaskRegistry:
                 logger.exception("Task %s (%s) failed", task_id, kind)
             finally:
                 state.finished_at = time.time()
+                self._prune_finished()
 
         self._tasks[task_id] = asyncio.create_task(runner(), name=f"task-{task_id}")
         return state
@@ -113,7 +119,7 @@ class TaskRegistry:
         if task is None:
             return None
         try:
-            await asyncio.wait_for(task, timeout=timeout)
+            await asyncio.wait_for(asyncio.shield(task), timeout=timeout)
         except asyncio.TimeoutError:
             pass
         except asyncio.CancelledError:
@@ -121,6 +127,25 @@ class TaskRegistry:
         except Exception:
             pass
         return self._states.get(task_id)
+
+    def _prune_finished(self) -> None:
+        if self._max_finished < 1:
+            return
+        finished = [
+            state
+            for state in self._states.values()
+            if state.status in FINAL_STATUSES
+        ]
+        excess = len(finished) - self._max_finished
+        if excess <= 0:
+            return
+        finished.sort(key=lambda state: state.finished_at or state.started_at or 0)
+        for state in finished[:excess]:
+            task = self._tasks.get(state.task_id)
+            if task is not None and not task.done():
+                continue
+            self._states.pop(state.task_id, None)
+            self._tasks.pop(state.task_id, None)
 
 
 task_registry = TaskRegistry()

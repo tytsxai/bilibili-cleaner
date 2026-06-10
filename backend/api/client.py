@@ -39,6 +39,11 @@ class BiliApiClient:
         max_retries: int = 3,
         retry_base_delay: float = 1.0,
     ) -> None:
+        if qps is not None and qps <= 0:
+            raise ValueError("qps must be positive")
+        if max_retries < 0:
+            raise ValueError("max_retries must be >= 0")
+
         headers = {
             "User-Agent": user_agent or DEFAULT_USER_AGENT,
             "Referer": referer or DEFAULT_REFERER,
@@ -49,13 +54,7 @@ class BiliApiClient:
         if bili_jct:
             cookies["bili_jct"] = bili_jct
         self._client = httpx.AsyncClient(headers=headers, cookies=cookies, timeout=timeout)
-        self._limiter = None
-        if qps is not None:
-            from .ratelimit import AsyncTokenBucket
-
-            self._limiter = AsyncTokenBucket(qps)
-        if max_retries < 0:
-            raise ValueError("max_retries must be >= 0")
+        self._qps = qps
         self._max_retries = max_retries
         self._retry_base_delay = retry_base_delay
         self._wbi_keys: tuple[str, str] | None = None
@@ -113,8 +112,10 @@ class BiliApiClient:
 
         last_exc: BiliApiError | None = None
         for attempt in range(self._max_retries + 1):
-            if self._limiter is not None:
-                await self._limiter.acquire()
+            if self._qps is not None:
+                from .ratelimit import get_shared_bucket
+
+                await get_shared_bucket(self._qps).acquire()
             try:
                 return await self._request_once(
                     method, url, params=params, data=data, json=json, headers=headers

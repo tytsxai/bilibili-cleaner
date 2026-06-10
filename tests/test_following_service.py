@@ -147,3 +147,27 @@ async def test_clear_all_loops_until_empty(client: BiliApiClient) -> None:
         result = await service.clear_all(999)
         assert result["ok"] == 2
         assert result["errors"] == []
+
+
+async def test_clear_all_stops_when_page_makes_no_progress(client: BiliApiClient) -> None:
+    client._max_retries = 0
+    service = FollowingService(client)
+    with respx.mock() as router:
+        followings_route = router.get(FOLLOWINGS_URL).mock(
+            return_value=_followings_page([{"mid": 1}, {"mid": 2}])
+        )
+        modify_route = router.post(MODIFY_URL).mock(
+            return_value=httpx.Response(200, json={"code": -352, "message": "risk"})
+        )
+        progress: list[tuple[int, bool]] = []
+        result = await service.clear_all(
+            999,
+            on_item=lambda mid, ok, err: progress.append((mid, ok)),
+        )
+
+        assert result["ok"] == 0
+        assert result["stopped_reason"] == "no_progress"
+        assert len(result["errors"]) == 2
+        assert progress == [(1, False), (2, False)]
+        assert followings_route.call_count == 1
+        assert modify_route.call_count == 2

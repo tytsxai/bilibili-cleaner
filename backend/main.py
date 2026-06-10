@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import logging
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -23,6 +24,8 @@ from backend.routers import (
     users_router,
 )
 from backend.services.cleaner import CleanerService
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Bilibili Cleaner",
@@ -99,6 +102,10 @@ async def http_exception_handler(_: Request, exc: HTTPException) -> JSONResponse
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(_: Request, exc: Exception) -> JSONResponse:
+    logger.error(
+        "Unhandled request failed",
+        exc_info=(type(exc), exc, exc.__traceback__),
+    )
     return JSONResponse(status_code=500, content={"error": "Internal server error"})
 
 

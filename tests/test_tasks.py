@@ -64,6 +64,42 @@ async def test_cancel_unknown_task() -> None:
     assert not registry.cancel("does-not-exist")
 
 
+async def test_wait_timeout_does_not_cancel_task() -> None:
+    registry = TaskRegistry()
+    release = asyncio.Event()
+
+    async def runner(state: TaskState) -> dict:
+        state.report_progress(advance=1)
+        await release.wait()
+        return {"done": True}
+
+    state = registry.create("test", runner)
+    timed_out = await registry.wait(state.task_id, timeout=0.01)
+    assert timed_out is not None
+    assert timed_out.status == "running"
+
+    release.set()
+    await registry.wait(state.task_id, timeout=1)
+    final = registry.get(state.task_id)
+    assert final is not None
+    assert final.status == "completed"
+
+
+async def test_prunes_finished_task_history() -> None:
+    registry = TaskRegistry(max_finished=1)
+
+    async def runner(state: TaskState) -> dict:
+        return {}
+
+    first = registry.create("first", runner)
+    await registry.wait(first.task_id)
+    second = registry.create("second", runner)
+    await registry.wait(second.task_id)
+
+    assert registry.get(first.task_id) is None
+    assert registry.get(second.task_id) is not None
+
+
 async def test_list_all() -> None:
     registry = TaskRegistry()
 

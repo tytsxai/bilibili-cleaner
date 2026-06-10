@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+import weakref
 
 
 class AsyncTokenBucket:
@@ -37,3 +38,24 @@ class AsyncTokenBucket:
                 self._tokens = min(float(self._burst), self._tokens + elapsed * self._qps)
                 self._last = now
             self._tokens -= 1.0
+
+
+_shared_buckets: weakref.WeakKeyDictionary[
+    asyncio.AbstractEventLoop, dict[tuple[float, int], AsyncTokenBucket]
+] = weakref.WeakKeyDictionary()
+
+
+def get_shared_bucket(qps: float, burst: int = 1) -> AsyncTokenBucket:
+    """Return a process-local bucket shared by clients on the same event loop."""
+    loop = asyncio.get_running_loop()
+    buckets = _shared_buckets.get(loop)
+    if buckets is None:
+        buckets = {}
+        _shared_buckets[loop] = buckets
+
+    key = (float(qps), int(burst))
+    bucket = buckets.get(key)
+    if bucket is None:
+        bucket = AsyncTokenBucket(qps=qps, burst=burst)
+        buckets[key] = bucket
+    return bucket
