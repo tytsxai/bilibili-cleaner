@@ -338,7 +338,14 @@
       },
       "TaskInfo": {
         "properties": {
+          "error_count": {
+            "default": 0,
+            "description": "Total errors seen, including any omitted from `errors`",
+            "title": "Error Count",
+            "type": "integer"
+          },
           "errors": {
+            "description": "Recorded errors, truncated to BILI_MAX_TASK_ERRORS entries",
             "items": {
               "additionalProperties": true,
               "type": "object"
@@ -478,9 +485,9 @@
     }
   },
   "info": {
-    "description": "Self-hosted toolkit for inspecting and cleaning a Bilibili account.\n\nAll write operations are rate-limited (default 1.5 r/s) and retry automatically on -352 / 412 risk-control responses. Long-running cleans are exposed as async tasks under `/api/v2/tasks/*`.\n\nEndpoints under `/api/v2/*` are the canonical AI-facing surface; `/api/clean/*` (v1) are preserved aliases.",
+    "description": "Open-source self-hosted toolkit for inspecting and cleaning your own Bilibili account: followings, favorite folders, dynamics, and watch history.\n\nAll requests are rate-limited (default 1.5 r/s, shared per event loop) and retried with exponential backoff on risk-control responses (`-352`, `-799`, `-509`, HTTP 412/429) — 3 retries, 4 attempts total. Long-running cleans are exposed as async tasks under `/api/v2/tasks/*`.\n\nEndpoints under `/api/v2/*` are the canonical AI-facing surface; `/api/clean/*` (v1) are preserved aliases.\n\nDeletes are permanent — Bilibili has no undo. Only the logged-in account can be operated on.",
     "title": "Bilibili Cleaner",
-    "version": "0.1.0"
+    "version": "1.2.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -2812,7 +2819,42 @@
     },
     "/api/v2/tasks": {
       "get": {
+        "description": "Summaries only, scoped to the caller's own session. ``errors`` and\n``result`` are omitted here because a clean over tens of thousands of items\nwould make this response enormous — fetch ``GET /tasks/{task_id}`` for the\nfull record.",
         "operationId": "list_tasks_api_v2_tasks_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -2827,9 +2869,19 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
-        "summary": "List all known tasks (in-memory)",
+        "summary": "List your tasks (in-memory, without error/result bodies)",
         "tags": [
           "tasks"
         ]
@@ -2922,6 +2974,38 @@
               "title": "Task Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
+            }
           }
         ],
         "responses": {
@@ -2963,6 +3047,38 @@
             "schema": {
               "title": "Task Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "SESSDATA",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sessdata"
+            }
+          },
+          {
+            "in": "header",
+            "name": "bili-jct",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Bili Jct"
             }
           }
         ],
@@ -3262,6 +3378,50 @@
           "users"
         ]
       }
+    },
+    "/healthz": {
+      "get": {
+        "description": "Cheap, unauthenticated, no upstream calls. If this stops answering the\nevent loop is wedged and the container should be restarted.",
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Healthz Healthz Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": [
+          "ops"
+        ]
+      }
+    },
+    "/readyz": {
+      "get": {
+        "description": "Reports task-queue saturation. Returns 503 once the queue is full so a\nload balancer stops sending work that would only be rejected with 429.\n\nDeliberately does not call B 站: a probe running every few seconds would\nconsume the shared rate-limit budget and could itself trigger risk control.",
+        "operationId": "readyz_readyz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Readiness / capacity probe",
+        "tags": [
+          "ops"
+        ]
+      }
     }
   },
   "tags": [
@@ -3300,6 +3460,10 @@
     {
       "description": "Legacy clear-all endpoints (kept for compatibility)",
       "name": "v1"
+    },
+    {
+      "description": "Health / readiness probes for deployment",
+      "name": "ops"
     }
   ]
 }

@@ -21,12 +21,16 @@ English: **Bilibili Cleaner is a local-first, self-hosted Bilibili account clean
 
 - [项目定位 / What It Is](#项目定位--what-it-is)
 - [核心功能 / Core Features](#核心功能--core-features)
+- [适用场景 / Use Cases](#适用场景--use-cases)
+- [重要限制 / Limitations](#重要限制--limitations)
 - [快速开始 / Quick Start](#快速开始--quick-start)
 - [Web UI 使用流程](#web-ui-使用流程)
 - [CLI 用法 / Command Line](#cli-用法--command-line)
 - [HTTP API / AI Agent 接入](#http-api--ai-agent-接入)
-- [重要限制 / Limitations](#重要限制--limitations)
+- [推荐工作流 / Recommended Workflow](#推荐工作流--recommended-workflow)
 - [安全与隐私 / Security and Privacy](#安全与隐私--security-and-privacy)
+- [部署与运维 / Deploy and Operate](#部署与运维--deploy-and-operate)
+- [常见问题 / FAQ](#常见问题--faq)
 
 ## 项目定位 / What It Is
 
@@ -83,9 +87,11 @@ English: **Bilibili Cleaner is a local-first, self-hosted Bilibili account clean
 - **所有删除不可恢复**：B 站没有回收站，批量删除前请先用列表接口或 Web UI 确认。
 - **不支持删除自己发过的评论**：B 站没有可靠的“列出我发过的评论”公开接口。
 - **不清理私信、粉丝、追番、稍后再看**：当前功能范围不包含这些数据。
-- **B 站没有批量取关接口**：项目会逐个调用取关接口，并默认在同一服务进程内共享约 `1.5 req/s` 限流。
-- **大量操作可能触发风控**：遇到 `-352`、`-799`、HTTP `412/429` 时会自动重试；仍失败时应暂停一段时间。
-- **任务状态保存在内存中**：服务进程重启会丢失 `/api/v2/tasks/*` 的任务进度，已完成任务只保留最近一批用于排障。
+- **B 站没有批量取关接口**：项目会逐个调用取关接口，并默认在同一服务进程（同一 event loop）内共享约 `1.5 req/s` 限流。因此取关 1600 个账号大约需要 18 分钟。
+- **大量操作可能触发风控**：遇到 `-352`、`-799`、`-509`、HTTP `412/429` 时会自动指数退避重试（3 次重试，合计最多 4 次请求）；仍失败时应暂停一段时间再继续。
+- **任务状态保存在内存中**：服务进程重启会丢失 `/api/v2/tasks/*` 的任务进度；已完成任务默认只保留最近 200 条用于排障。
+- **必须单进程运行**：任务状态在进程内存里，多 worker 会让 `GET /api/v2/tasks/{id}` 随机返回 404，而后台删除仍在继续。Docker 镜像已写死 `--workers 1`。
+- **服务本身没有认证**：`SESSDATA` / `bili_jct` 是逐请求传入的 B 站凭据，不是本服务的登录凭据；能访问端口的人就能通过它请求 B 站。默认只监听 `127.0.0.1`，详见 [SECURITY.md](SECURITY.md)。
 - **只操作当前登录账号**：不能也不应该用于他人账号。
 
 ## 快速开始 / Quick Start
@@ -110,7 +116,12 @@ http://localhost:8000
 docker compose down
 ```
 
-如果 `8000` 端口被占用，修改 [docker-compose.yml](docker-compose.yml) 中的端口映射，例如把 `"8000:8000"` 改成 `"8080:8000"`。
+如果 `8000` 端口被占用，修改 [docker-compose.yml](docker-compose.yml) 中的端口映射，例如把 `"127.0.0.1:8000:8000"` 改成 `"127.0.0.1:8080:8000"`。
+
+默认只绑定 `127.0.0.1`：服务本身没有认证，能访问端口的人就能通过它向 B 站发请求。
+需要远程访问时请在前面加带认证的反向代理，见 [docs/DEPLOY.md](docs/DEPLOY.md)。
+
+删除操作会记录到宿主机 `./data/audit.jsonl`。B 站没有回收站，这是唯一的事后追溯依据。
 
 ### 方式二：Python 本地运行
 
@@ -121,8 +132,9 @@ cd bilibili-cleaner
 python3 -m venv .venv
 source .venv/bin/activate
 
-pip install -r backend/requirements.txt
-uvicorn backend.main:app --host 0.0.0.0 --port 8000
+# -c constraints.txt 使用与镜像一致的固定版本；省略则按上下界解析最新可用版本
+pip install -r backend/requirements.txt -c constraints.txt
+uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 1
 ```
 
 Windows PowerShell 激活虚拟环境：
@@ -135,6 +147,8 @@ Windows PowerShell 激活虚拟环境：
 
 - Web UI: `http://localhost:8000`
 - Swagger / OpenAPI UI: `http://localhost:8000/docs`
+- 存活探针 / Liveness: `http://localhost:8000/healthz`
+- 就绪探针 / Readiness: `http://localhost:8000/readyz`
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
 
 ## Web UI 使用流程
@@ -229,11 +243,27 @@ Content-Type: application/json
 ## 安全与隐私 / Security and Privacy
 
 - 本项目是本地运行工具，不提供托管服务。
-- Web UI 将 `SESSDATA` 和 `bili_jct` 存在浏览器 localStorage；不要在公共电脑上使用。
-- CLI 凭证默认保存在 `~/.bilibili-cleaner/credentials.json`。
+- **服务本身没有认证**：`SESSDATA` / `bili_jct` 是逐请求传入的 B 站凭据。默认只绑定 `127.0.0.1`；要远程访问必须自己加带认证的反向代理。
+- Web UI 将 `SESSDATA` 和 `bili_jct` 存在浏览器 `sessionStorage`（仅限当前标签页，关闭即清除）；旧版本遗留在 `localStorage` 的凭据会在加载时自动清理。
+- CLI 凭证默认保存在 `~/.bilibili-cleaner/credentials.json`（保存时 `chmod 600`）。
+- 服务端不落盘任何凭据，也不把凭据写进日志。
+- 异步任务按创建者归属（凭据摘要），其他会话看不到也取消不了你的任务。
 - 后端对 B 站写操作带 `bili_jct` 作为 CSRF 参数。
 - 日志输出使用 `textContent` 写入，降低前端日志 XSS 风险。
+- 容器以非 root 用户（uid 10001）运行。
 - 代码开源，建议在执行大规模删除前先阅读代码和 API 文档。
+
+完整威胁模型与凭据存放说明见 [SECURITY.md](SECURITY.md)。
+
+## 部署与运维 / Deploy and Operate
+
+上线、配置、健康检查、日志、审计与回滚的完整说明见 **[docs/DEPLOY.md](docs/DEPLOY.md)**。要点：
+
+- 全部配置走 `BILI_` 前缀环境变量，可复制 [.env.example](.env.example) 为 `.env`。
+- `GET /healthz` 存活探针，`GET /readyz` 就绪 / 容量探针（任务队列满时返回 503）。
+- 每次删除写入 `data/audit.jsonl`，用于事后核对被删了什么。
+- 收到 SIGTERM 会取消在跑的任务并标记状态，不会让任务永远停在 `running`。
+- 服务无数据库、无迁移，回滚就是换镜像重启。
 
 ## 项目结构 / Repository Layout
 
@@ -246,7 +276,11 @@ bilibili-cleaner/
 ├── docs/
 │   ├── README.md             # 文档总览与阅读路径
 │   ├── API.md                # HTTP API + CLI reference
+│   ├── DEPLOY.md             # 部署、配置、健康检查、审计、回滚
 │   └── FAQ.md                # FAQ and troubleshooting
+├── SECURITY.md               # 威胁模型与凭据处理
+├── .env.example              # 可复制为 .env 的运行配置
+├── constraints.txt           # 部署用的固定依赖版本
 ├── openapi.json              # OpenAPI snapshot
 ├── backend/
 │   ├── api/                  # Bilibili API wrappers, WBI, rate limit, retry
@@ -275,20 +309,36 @@ python3 scripts/dump_openapi.py
 
 提交 PR 前建议至少运行测试，并在接口变化后更新 `openapi.json` 和相关文档。
 
-## GitHub Topics 建议
+## 常见问题 / FAQ
 
-如果你维护此仓库，建议在 GitHub Topics 中添加：
+**Bilibili Cleaner 是官方工具吗？**
+不是。本项目与哔哩哔哩官方没有任何关联，调用的是 B 站公开 Web API，使用者需自行遵守平台规则。
 
-```text
-bilibili, bilibili-cleaner, b站, 哔哩哔哩, account-cleanup, privacy-tool,
-fastapi, typer, cli-tool, self-hosted, openapi, ai-agent, data-cleanup
-```
+**会不会把我的账号凭证上传到第三方服务器？**
+不会。项目不提供托管服务。Web UI、后端和 CLI 都在你自己的机器上运行，请求从你的机器直接发往 bilibili.com。凭证保存在浏览器 localStorage 或 `~/.bilibili-cleaner/credentials.json`。
 
-## SEO / GEO 关键词说明
+**会导致封号吗？**
+项目默认以约 `1.5 req/s` 的低频调用接口并自动处理风控重试，正常使用更常见的是临时限流而不是封号。但任何批量自动化操作都存在平台风控风险，数据量大时建议分批执行。
 
-本项目相关的自然搜索词包括：B 站清理工具、哔哩哔哩批量取关、Bilibili bulk unfollow、清空 B 站收藏夹、删除 B 站动态、清空 Bilibili watch history、B 站账号注销前数据清理、Bilibili account cleanup、self-hosted Bilibili cleaner、Bilibili API CLI。
+**能删除我发过的评论吗？**
+不能。B 站没有可靠的“列出我发过的所有评论”公开接口，无法安全定位并批量删除，因此项目不提供该功能。
 
-这些关键词描述的是项目真实能力，不代表官方背书或与哔哩哔哩存在关联。
+**支持清理私信、粉丝、追番、稍后再看吗？**
+当前不支持。项目范围是关注、收藏夹、动态和观看历史四类数据。
+
+**能清理别人的账号吗？**
+不能。只能操作当前扫码登录或凭证对应的账号。
+
+**删除后还能恢复吗？**
+不能。B 站没有回收站，所有删除不可恢复。建议先用列表接口导出并复核，再执行删除。
+
+**为什么批量取关这么慢？**
+B 站没有真正的批量取关接口，底层只能逐个 `fid` 调用，加上默认限流，取关 1600 个账号约需 18 分钟。
+
+**该用 Web UI、CLI 还是 API？**
+只想快速清空用 Web UI；想先筛选、复核、分批操作用 CLI；要让脚本或 AI Agent 编排用 `/api/v2/*` 配合 [openapi.json](openapi.json)。
+
+更多排障内容（`-101` 登录失效、`-352` 风控、任务状态丢失等）见 [docs/FAQ.md](docs/FAQ.md)。
 
 ## Star History
 

@@ -4,6 +4,54 @@
 
 ## [Unreleased]
 
+### 生产就绪 / Production readiness
+
+面向"上线并长期稳定运行"的一轮补强，无破坏性接口改动。
+
+#### 修复
+- **误报成功**：`clear_all` 在触发页数安全上限时会直接返回，看起来和"清理干净了"一模一样。
+  现在返回 `stopped_reason: "page_limit"`，动态清理也补上了此前缺失的 `no_progress` 判定。
+- **v1 `/api/clean/*` 恒返回 `success: true`**：即使逐项失败或提前中止也报成功。
+  现在 `success` 反映实际是否清理完成，并新增 `errors` / `stopped_reason` 字段（增量字段，旧调用方不受影响）。
+- **WBI 密钥每请求重取**：HTTP 层每个请求新建一个 client，导致每次签名调用都额外打一次 `/nav`，
+  白白消耗限流额度并抬高风控概率。改为进程级缓存（TTL 1 小时）。
+- **应用日志全部丢失**：root logger 没有 handler，`INFO` 被静默丢弃，`WARNING` 以上退化为
+  无时间戳的 lastResort 输出。现在统一配置日志。
+
+#### 新增
+- `GET /healthz`（存活）与 `GET /readyz`（就绪 / 容量，任务队列满时返回 503）。两者都不调用 B 站接口。
+- 请求日志中间件：记录 method / path / 状态码 / 耗时，并为每个请求生成 request id，
+  通过 `X-Request-ID` 响应头返回，也接受调用方传入。
+- **删除审计日志**：每次删除追加一行 JSON 到 `data/audit.jsonl`（可配置、可关闭、自动轮转）。
+  B 站没有回收站，这是唯一的事后追溯依据。
+- **优雅关停**：收到 SIGTERM 时取消在跑的任务并标记为 `cancelled`，不再让任务永远停在 `running`。
+- **任务并发上限**（默认 4，超出返回 429）与**任务错误条数上限**（默认 200，总数记在新的 `error_count` 字段）。
+- `GET /api/v2/tasks` 改为只返回摘要，不再携带全部 `errors` / `result`，避免大规模清理时响应体膨胀。
+- `backend/settings.py`：所有可调项走 `BILI_` 前缀环境变量，非法值回退默认值。新增 `.env.example`。
+- `constraints.txt`：部署用的固定依赖版本，使 `docker build` 可复现；`requirements.txt` / `pyproject.toml` 补上版本上界。
+- 新增 `docs/DEPLOY.md`（部署、配置、健康检查、日志、审计恢复、关停回滚）与 `SECURITY.md`（威胁模型、凭据处理）。
+
+#### 变更
+- `/api/v2/tasks/*` 从"完全不校验"改为**按创建者归属**：任务记录 `SESSDATA` 的 SHA-256 摘要，
+  查询 / 列表 / 取消只对同一凭据可见，其他凭据一律 404（返回 403 等于确认任务存在）。
+  注册表内不保存可用凭据。
+- **收藏夹清理补上"整页零进展"保护**，与关注 / 动态一致：某个收藏夹一条都删不掉时停下并返回
+  `stopped_reason`，而不是继续遍历剩余收藏夹后报告清理成功。
+- **`clean-all` 任务结果透出 `stopped_reason`**：任一资源提前中止都会记录在 `result.stopped_reason` 里，
+  不再让任务以 `completed` 收尾却少删了东西。
+- **统一出站客户端构造**（`_deps.build_client`）：此前 11 处内联构造 `BiliApiClient` 绕过了配置的
+  timeout / 重试策略——恰好包括最需要它们的后台长任务。
+- **Web UI 凭据改存 `sessionStorage`**（关标签页即清除），并在加载时清掉旧版遗留在 `localStorage` 的凭据。
+- **Web UI 任务轮询加上上限**：总时长上限、连续失败上限，服务重启或网络中断时不再无限空转；
+  错误数改用 `error_count`（`errors` 已被截断，用它会严重少报）。
+- 进度回调从 `"object | None"` 改为真实的 `Callable` 类型（`backend/services/_progress.py`）。
+- ruff 启用 `UP` 规则并完成 `typing.Mapping` → `collections.abc` 的现代化。
+- Docker 镜像以非 root 用户（uid 10001）运行，内置 `HEALTHCHECK`，并写死 `--workers 1`
+  ——任务状态在进程内存中，多 worker 会让任务查询随机 404。
+- `docker-compose.yml` 默认绑定 `127.0.0.1:8000`（服务本身没有认证），
+  增加 healthcheck、日志轮转、`stop_grace_period` 和 `./data` 卷。
+- CI 增加 ruff lint、固定版本安装验证、Docker 构建 + 健康检查 + 非 root 校验。
+
 ### 文档
 - 优化 README 首屏定位、阅读路径、使用场景和方案对比，提升传统搜索引擎与 AI 搜索引擎理解度。
 - 新增 `docs/README.md` 文档总览，串联 README、API、FAQ、OpenAPI、llms 和 Agent 使用边界。
