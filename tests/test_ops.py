@@ -133,6 +133,33 @@ async def test_list_endpoint_omits_error_and_result_bodies(
     assert detail.json()["result"] == {"big": "payload"}
 
 
+async def test_summary_keeps_stopped_reason_out_of_the_dropped_result() -> None:
+    """A partial clean must stay visible in the task list. Everything else in
+    ``result`` is dropped, but this field is what says it did not finish."""
+    from backend.services.tasks import task_registry
+
+    async def builder(_: TaskState) -> dict:
+        return {"ok": 3, "stopped_reason": "no_progress", "bulky": "x" * 10_000}
+
+    state = task_registry.create("test.partial", builder)
+    await task_registry.wait(state.task_id, timeout=2)
+
+    assert state.summary()["result"] == {"stopped_reason": "no_progress"}
+    assert state.to_dict()["result"]["bulky"] == "x" * 10_000
+
+
+async def test_summary_drops_result_entirely_for_a_complete_clean() -> None:
+    from backend.services.tasks import task_registry
+
+    async def builder(_: TaskState) -> dict:
+        return {"ok": 3, "bulky": "x" * 10_000}
+
+    state = task_registry.create("test.complete", builder)
+    await task_registry.wait(state.task_id, timeout=2)
+
+    assert state.summary()["result"] is None
+
+
 async def test_task_endpoints_require_auth(async_client: httpx.AsyncClient) -> None:
     assert (await async_client.get("/api/v2/tasks")).status_code == 401
     assert (await async_client.get("/api/v2/tasks/anything")).status_code == 401

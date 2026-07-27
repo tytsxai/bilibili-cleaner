@@ -93,10 +93,17 @@ class TaskState:
         }
 
     def summary(self) -> dict[str, Any]:
-        """Status without the potentially large ``errors`` / ``result`` bodies."""
+        """Status without the potentially large ``errors`` / ``result`` bodies.
+
+        ``stopped_reason`` is deliberately kept: it is the one field that says
+        the clean did not actually finish, and dropping it with the rest of
+        ``result`` would make a partial clean indistinguishable from a complete
+        one in the task list. It is a short string or a small dict.
+        """
         data = self.to_dict()
         data["errors"] = []
-        data["result"] = None
+        reason = self.result.get("stopped_reason") if isinstance(self.result, dict) else None
+        data["result"] = {"stopped_reason": reason} if reason else None
         return data
 
 
