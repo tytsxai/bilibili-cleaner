@@ -4,9 +4,31 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-28
+
+本版本包含两部分：此前开发但从未打过 tag 的 1.2.0（`/api/v2` 资源接口、Typer CLI、
+异步任务队列），以及一轮面向生产环境的补强。**没有破坏性接口改动**，`/api/clean/*`
+与 `/api/v2/*` 的既有调用方均不受影响。
+
+由于 1.2.0 从未发布，其内容一并计入本版本。
+
+### 新增：HTTP API v2、CLI 与任务队列（原 1.2.0）
+
+- **`/api/v2/*` 资源接口**：按 `me` / `users` / `followings` / `favorites` / `dynamics` /
+  `history` / `relation-tags` / `tasks` 分组，带 Pydantic schema 与 OpenAPI tag，
+  支持"列出 → 筛选 → 选择性删除"而不只是一键清空。
+- **`bilibili-cleaner` CLI**：基于 Typer，与 HTTP API 共用同一 service 层，默认输出 JSON。
+  凭据支持环境变量或 `~/.bilibili-cleaner/credentials.json`。
+- **异步任务队列**：长时间清理返回 `task_id`，通过 `GET /api/v2/tasks/{id}` 轮询进度；
+  Web UI 也改为轮询任务而不是等待同步响应。
+- **全局限流与风控重试**：进程内共享令牌桶（默认 1.5 req/s），对 `-352`、`-799`、`-509`、
+  HTTP `412/429` 指数退避重试。
+- **WBI 签名助手**：动态与用户接口统一走签名逻辑，失败时自动刷新密钥重试一次。
+- **`openapi.json` 快照与 `AGENTS.md`**：供 AI Agent / 脚本编排使用。
+
 ### 生产就绪 / Production readiness
 
-面向"上线并长期稳定运行"的一轮补强，无破坏性接口改动。
+面向"上线并长期稳定运行"的一轮补强。
 
 #### 修复
 - **误报成功**：`clear_all` 在触发页数安全上限时会直接返回，看起来和"清理干净了"一模一样。
@@ -99,6 +121,7 @@
 - Docker Compose 一键部署
 - 单元测试（95%+ 覆盖率）
 
+[1.3.0]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.1.1...v1.3.0
 [1.1.1]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/tytsxai/bilibili-cleaner/releases/tag/v1.0.0

@@ -487,7 +487,7 @@
   "info": {
     "description": "Open-source self-hosted toolkit for inspecting and cleaning your own Bilibili account: followings, favorite folders, dynamics, and watch history.\n\nAll requests are rate-limited (default 1.5 r/s, shared per event loop) and retried with exponential backoff on risk-control responses (`-352`, `-799`, `-509`, HTTP 412/429) — 3 retries, 4 attempts total. Long-running cleans are exposed as async tasks under `/api/v2/tasks/*`.\n\nEndpoints under `/api/v2/*` are the canonical AI-facing surface; `/api/clean/*` (v1) are preserved aliases.\n\nDeletes are permanent — Bilibili has no undo. Only the logged-in account can be operated on.",
     "title": "Bilibili Cleaner",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "openapi": "3.1.0",
   "paths": {

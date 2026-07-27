@@ -60,7 +60,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     lifespan=lifespan,
     title="Bilibili Cleaner",
-    version="1.2.0",
+    version="1.3.0",
     description=(
         "Open-source self-hosted toolkit for inspecting and cleaning your own "
         "Bilibili account: followings, favorite folders, dynamics, and watch "
