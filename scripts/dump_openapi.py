@@ -13,14 +13,18 @@ import json
 import sys
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
 
 def main() -> None:
+    # Run as a script, sys.path[0] is scripts/, so `backend` is not importable.
+    sys.path.insert(0, str(REPO_ROOT))
     from backend.main import app
 
     schema = app.openapi()
     payload = json.dumps(schema, ensure_ascii=False, indent=2, sort_keys=True)
 
-    target = sys.argv[1] if len(sys.argv) > 1 else "openapi.json"
+    target = sys.argv[1] if len(sys.argv) > 1 else str(REPO_ROOT / "openapi.json")
     if target == "-":
         sys.stdout.write(payload + "\n")
         return
