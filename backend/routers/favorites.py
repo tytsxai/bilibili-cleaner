@@ -4,12 +4,11 @@ from typing import Any
 
 from fastapi import APIRouter, Path, Query
 
-from backend.api import BiliApiClient
 from backend.schemas import BatchActionResult, DeleteFavoritesRequest, TaskAck
 from backend.services import FavoriteService
 from backend.services.tasks import TaskState, task_registry
 
-from ._deps import DEFAULT_API_QPS, AuthDep, authed_client
+from ._deps import AuthDep, authed_client, task_owner
 
 router = APIRouter(prefix="/favorites", tags=["favorites"])
 
@@ -68,12 +67,8 @@ async def clear_favorites_task(
     mid: int = Query(..., ge=1),
     auth: tuple[str, str] = AuthDep,
 ) -> TaskAck:
-    sessdata, bili_jct = auth
-
     async def builder(state: TaskState) -> dict[str, Any]:
-        async with BiliApiClient(
-            sessdata=sessdata, bili_jct=bili_jct, qps=DEFAULT_API_QPS
-        ) as client:
+        async with authed_client(auth) as client:
             service = FavoriteService(client)
 
             def on_batch(_media_id: int, batch: list[str], err: dict | None) -> None:
@@ -83,5 +78,5 @@ async def clear_favorites_task(
 
             return await service.clear_all(mid, on_batch=on_batch)
 
-    state = task_registry.create("favorites.clear", builder)
+    state = task_registry.create("favorites.clear", builder, owner=task_owner(auth))
     return TaskAck(task_id=state.task_id)

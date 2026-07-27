@@ -20,7 +20,13 @@ class TaskInfo(BaseModel):
     )
     processed: int = 0
     total: int | None = None
-    errors: list[dict[str, Any]] = Field(default_factory=list)
+    errors: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Recorded errors, truncated to BILI_MAX_TASK_ERRORS entries",
+    )
+    error_count: int = Field(
+        0, description="Total errors seen, including any omitted from `errors`"
+    )
     result: dict[str, Any] | None = None
     started_at: float | None = None
     finished_at: float | None = None

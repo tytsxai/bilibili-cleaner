@@ -4,12 +4,11 @@ from typing import Any
 
 from fastapi import APIRouter, Query
 
-from backend.api import BiliApiClient
 from backend.schemas import BatchActionResult, DeleteDynamicsRequest, TaskAck
 from backend.services import DynamicService
 from backend.services.tasks import TaskState, task_registry
 
-from ._deps import DEFAULT_API_QPS, AuthDep, authed_client
+from ._deps import AuthDep, authed_client, task_owner
 
 router = APIRouter(prefix="/dynamics", tags=["dynamics"])
 
@@ -49,12 +48,8 @@ async def clear_dynamics_task(
     mid: int = Query(..., ge=1),
     auth: tuple[str, str] = AuthDep,
 ) -> TaskAck:
-    sessdata, bili_jct = auth
-
     async def builder(state: TaskState) -> dict[str, Any]:
-        async with BiliApiClient(
-            sessdata=sessdata, bili_jct=bili_jct, qps=DEFAULT_API_QPS
-        ) as client:
+        async with authed_client(auth) as client:
             service = DynamicService(client)
 
             def on_item(_id: int, ok: bool, err: dict | None) -> None:
@@ -64,5 +59,5 @@ async def clear_dynamics_task(
 
             return await service.clear_all(mid, on_item=on_item)
 
-    state = task_registry.create("dynamics.clear", builder)
+    state = task_registry.create("dynamics.clear", builder, owner=task_owner(auth))
     return TaskAck(task_id=state.task_id)

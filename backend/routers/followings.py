@@ -4,7 +4,6 @@ from typing import Any
 
 from fastapi import APIRouter, Path, Query
 
-from backend.api import BiliApiClient
 from backend.schemas import (
     BatchActionResult,
     FollowingDetail,
@@ -15,7 +14,7 @@ from backend.schemas import (
 from backend.services import FollowingService
 from backend.services.tasks import TaskState, task_registry
 
-from ._deps import DEFAULT_API_QPS, AuthDep, authed_client
+from ._deps import AuthDep, authed_client, task_owner
 
 router = APIRouter(prefix="/followings", tags=["followings"])
 
@@ -112,13 +111,10 @@ async def unfollow_many_task(
 
     Recommended for batches >50 since the HTTP client may time out on the
     synchronous endpoint."""
-    sessdata, bili_jct = auth
     mids = list(body.mids)
 
     async def builder(state: TaskState) -> dict[str, Any]:
-        async with BiliApiClient(
-            sessdata=sessdata, bili_jct=bili_jct, qps=DEFAULT_API_QPS
-        ) as client:
+        async with authed_client(auth) as client:
             service = FollowingService(client)
 
             def on_item(mid: int, ok: bool, err: dict | None) -> None:
@@ -128,7 +124,9 @@ async def unfollow_many_task(
 
             return await service.unfollow_many(mids, on_item=on_item)
 
-    state = task_registry.create("followings.unfollow", builder, total=len(mids))
+    state = task_registry.create(
+        "followings.unfollow", builder, owner=task_owner(auth), total=len(mids)
+    )
     return TaskAck(task_id=state.task_id)
 
 
@@ -143,12 +141,8 @@ async def clear_followings_task(
 ) -> TaskAck:
     """Background-clear all followings. Equivalent to v1 ``POST /api/clean/followings``
     but returns immediately with a task_id."""
-    sessdata, bili_jct = auth
-
     async def builder(state: TaskState) -> dict[str, Any]:
-        async with BiliApiClient(
-            sessdata=sessdata, bili_jct=bili_jct, qps=DEFAULT_API_QPS
-        ) as client:
+        async with authed_client(auth) as client:
             service = FollowingService(client)
 
             def on_item(target: int, ok: bool, err: dict | None) -> None:
@@ -158,5 +152,5 @@ async def clear_followings_task(
 
             return await service.clear_all(mid, on_item=on_item)
 
-    state = task_registry.create("followings.clear", builder)
+    state = task_registry.create("followings.clear", builder, owner=task_owner(auth))
     return TaskAck(task_id=state.task_id)

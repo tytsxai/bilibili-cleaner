@@ -2,19 +2,23 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Path, status
 
-from backend.api import BiliApiClient
 from backend.schemas import TaskAck, TaskInfo
 from backend.services import CleanerService
 from backend.services.tasks import TaskState, task_registry
 
-from ._deps import DEFAULT_API_QPS, AuthDep
+from ._deps import AuthDep, authed_client, task_owner
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
-@router.get("", summary="List all known tasks (in-memory)")
-async def list_tasks() -> list[TaskInfo]:
-    return [TaskInfo(**s.to_dict()) for s in task_registry.list_all()]
+@router.get("", summary="List your tasks (in-memory, without error/result bodies)")
+async def list_tasks(auth: tuple[str, str] = AuthDep) -> list[TaskInfo]:
+    """Summaries only, scoped to the caller's own session. ``errors`` and
+    ``result`` are omitted here because a clean over tens of thousands of items
+    would make this response enormous — fetch ``GET /tasks/{task_id}`` for the
+    full record."""
+    states = task_registry.list_all(owner=task_owner(auth))
+    return [TaskInfo(**s.summary()) for s in states]
 
 
 @router.get(
@@ -22,8 +26,11 @@ async def list_tasks() -> list[TaskInfo]:
     response_model=TaskInfo,
     summary="Get status / progress / errors / result of a task",
 )
-async def get_task(task_id: str = Path(...)) -> TaskInfo:
-    state = task_registry.get(task_id)
+async def get_task(
+    task_id: str = Path(...),
+    auth: tuple[str, str] = AuthDep,
+) -> TaskInfo:
+    state = task_registry.get(task_id, owner=task_owner(auth))
     if state is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="task not found")
     return TaskInfo(**state.to_dict())
@@ -33,8 +40,11 @@ async def get_task(task_id: str = Path(...)) -> TaskInfo:
     "/{task_id}",
     summary="Cancel a running task",
 )
-async def cancel_task(task_id: str = Path(...)) -> dict:
-    if not task_registry.cancel(task_id):
+async def cancel_task(
+    task_id: str = Path(...),
+    auth: tuple[str, str] = AuthDep,
+) -> dict:
+    if not task_registry.cancel(task_id, owner=task_owner(auth)):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="task not found or already finished",
@@ -54,12 +64,9 @@ async def clean_all_task(
     """Start a single async task that wipes everything. Poll
     ``GET /tasks/{task_id}`` for progress; ``result`` holds the per-resource
     counts at the end."""
-    sessdata, bili_jct = auth
 
     async def builder(state: TaskState) -> dict:
-        async with BiliApiClient(
-            sessdata=sessdata, bili_jct=bili_jct, qps=DEFAULT_API_QPS
-        ) as client:
+        async with authed_client(auth) as client:
             service = CleanerService(client)
             followings = await service.clear_all_followings(mid)
             state.report_progress(advance=followings.count)
@@ -69,12 +76,27 @@ async def clean_all_task(
             state.report_progress(advance=dynamics.count)
             history = await service.clear_history()
             state.report_progress(advance=history.count)
-            return {
+            stopped = {
+                name: part.stopped_reason
+                for name, part in (
+                    ("followings", followings),
+                    ("favorites", favorites),
+                    ("dynamics", dynamics),
+                    ("history", history),
+                )
+                if part.stopped_reason
+            }
+            result = {
                 "followings": followings.count,
                 "favorites": favorites.count,
                 "dynamics": dynamics.count,
                 "history": history.count,
             }
+            if stopped:
+                # Surface partial cleans instead of letting the task report
+                # "completed" with counts that silently fall short.
+                result["stopped_reason"] = stopped
+            return result
 
-    state = task_registry.create("clean.all", builder)
+    state = task_registry.create("clean.all", builder, owner=task_owner(auth))
     return TaskAck(task_id=state.task_id)
