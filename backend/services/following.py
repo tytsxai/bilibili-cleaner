@@ -2,13 +2,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, AsyncIterator, Sequence
+from collections.abc import AsyncIterator, Sequence
+from typing import Any
 
+from backend import audit
 from backend.api import RelationApi, UserApi
 from backend.api.client import BiliApiClient, BiliApiError
-from ._utils import extract_following_mids, safe_int
+
+from ._progress import ItemCallback
+from ._utils import extract_following_mids
 
 logger = logging.getLogger(__name__)
+
+MAX_CLEAR_PAGES = 200
 
 
 class FollowingService:
@@ -104,7 +110,7 @@ class FollowingService:
         self,
         mids: Sequence[int],
         *,
-        on_item: "object | None" = None,
+        on_item: ItemCallback | None = None,
     ) -> dict[str, Any]:
         """Unfollow each mid sequentially. ``on_item`` is a callable
         ``(mid, ok, error)`` invoked after each attempt for progress tracking."""
@@ -114,12 +120,14 @@ class FollowingService:
             try:
                 await self._relation_api.unfollow(target)
                 ok += 1
+                audit.record("following.unfollow", target, ok=True)
                 if on_item is not None:
                     on_item(target, True, None)
             except Exception as exc:
                 err = {"mid": target, "type": type(exc).__name__, "message": str(exc)}
                 errors.append(err)
                 logger.warning("Failed to unfollow mid=%s: %s", target, exc)
+                audit.record("following.unfollow", target, ok=False, error=str(exc))
                 if on_item is not None:
                     on_item(target, False, err)
         return {"ok": ok, "errors": errors, "total": len(mids)}
@@ -128,7 +136,7 @@ class FollowingService:
         self,
         mid: int,
         *,
-        on_item: "object | None" = None,
+        on_item: ItemCallback | None = None,
     ) -> dict[str, Any]:
         ok = 0
         errors: list[dict[str, Any]] = []
@@ -144,12 +152,14 @@ class FollowingService:
                     await self._relation_api.unfollow(target)
                     ok += 1
                     page_ok += 1
+                    audit.record("following.unfollow", target, ok=True)
                     if on_item is not None:
                         on_item(target, True, None)
                 except Exception as exc:
                     err = {"mid": target, "type": type(exc).__name__, "message": str(exc)}
                     errors.append(err)
                     logger.warning("Failed to unfollow mid=%s: %s", target, exc)
+                    audit.record("following.unfollow", target, ok=False, error=str(exc))
                     if on_item is not None:
                         on_item(target, False, err)
             if page_ok == 0:
@@ -159,6 +169,13 @@ class FollowingService:
                 )
                 return {"ok": ok, "errors": errors, "stopped_reason": "no_progress"}
             safety += 1
-            if safety > 200:
-                break
+            if safety > MAX_CLEAR_PAGES:
+                # Bailing out here used to look identical to a finished clean,
+                # so the caller reported success while followings remained.
+                logger.warning(
+                    "clear_all for mid=%s hit the %s-page safety limit with items left",
+                    mid,
+                    MAX_CLEAR_PAGES,
+                )
+                return {"ok": ok, "errors": errors, "stopped_reason": "page_limit"}
         return {"ok": ok, "errors": errors}

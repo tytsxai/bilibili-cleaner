@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend import audit
 from backend.api import HistoryApi
 from backend.api.client import BiliApiClient
 
@@ -28,7 +29,19 @@ class HistoryService:
         )
 
     async def delete(self, kid: str) -> dict[str, Any]:
-        return await self._api.delete_history(kid)
+        try:
+            result = await self._api.delete_history(kid)
+        except Exception as exc:
+            audit.record("history.delete", kid, ok=False, error=str(exc))
+            raise
+        audit.record("history.delete", kid, ok=True)
+        return result
 
     async def clear(self) -> dict[str, Any]:
-        return await self._api.clear_history()
+        try:
+            result = await self._api.clear_history()
+        except Exception as exc:
+            audit.record("history.clear", None, ok=False, error=str(exc))
+            raise
+        audit.record("history.clear", None, ok=True)
+        return result

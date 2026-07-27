@@ -13,6 +13,18 @@ from .history import HistoryService
 @dataclass(frozen=True)
 class CleanResult:
     count: int
+    errors: int = 0
+    stopped_reason: str | None = None
+
+    @property
+    def complete(self) -> bool:
+        """False when the clean gave up early or hit per-item failures.
+
+        The v1 endpoints used to report ``success: True`` regardless, so a run
+        that bailed out after a page of failures looked identical to one that
+        actually emptied the account.
+        """
+        return self.errors == 0 and self.stopped_reason is None
 
 
 class CleanerService:
@@ -29,17 +41,23 @@ class CleanerService:
         self._history = HistoryService(client)
 
     async def clear_all_followings(self, mid: int) -> CleanResult:
-        result = await self._following.clear_all(mid)
-        return CleanResult(int(result.get("ok", 0)))
+        return _to_result(await self._following.clear_all(mid))
 
     async def clear_all_favorites(self, mid: int) -> CleanResult:
-        result = await self._favorite.clear_all(mid)
-        return CleanResult(int(result.get("ok", 0)))
+        return _to_result(await self._favorite.clear_all(mid))
 
     async def clear_all_dynamics(self, mid: int) -> CleanResult:
-        result = await self._dynamic.clear_all(mid)
-        return CleanResult(int(result.get("ok", 0)))
+        return _to_result(await self._dynamic.clear_all(mid))
 
     async def clear_history(self) -> CleanResult:
         await self._history.clear()
         return CleanResult(1)
+
+
+def _to_result(raw: dict) -> CleanResult:
+    errors = raw.get("errors")
+    return CleanResult(
+        count=int(raw.get("ok", 0)),
+        errors=len(errors) if isinstance(errors, list) else 0,
+        stopped_reason=raw.get("stopped_reason"),
+    )
