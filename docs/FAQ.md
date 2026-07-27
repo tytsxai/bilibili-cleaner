@@ -27,7 +27,7 @@ English: Bilibili Cleaner is an open-source self-hosted Bilibili account cleanup
 
 项目本身不提供托管服务。默认运行方式下，Web UI、后端和 CLI 都在你的本机或自托管环境中运行，请求从你的机器直接访问 bilibili.com。
 
-Web UI 会把 `SESSDATA` 和 `bili_jct` 保存在浏览器 localStorage；CLI 会把凭证保存在 `~/.bilibili-cleaner/credentials.json`，除非你改用 `BILI_SESSDATA` 和 `BILI_JCT` 环境变量。
+Web UI 会把 `SESSDATA` 和 `bili_jct` 保存在浏览器 `sessionStorage`（仅限当前标签页，关闭即清除）；CLI 会把凭证保存在 `~/.bilibili-cleaner/credentials.json`，除非你改用 `BILI_SESSDATA` 和 `BILI_JCT` 环境变量。
 
 ### 可以在公共电脑上使用吗？
 
@@ -63,9 +63,23 @@ B 站没有可靠公开的“列出我发过的所有评论”的 API。没有�
 
 ### 推荐用 Web UI、CLI 还是 API？
 
-- 只想快速清空：使用 Web UI。
-- 想先筛选、复核、分批操作：使用 CLI 或 `/api/v2/*`。
+- 想在浏览器里预览、筛选、复核并选择性删除：使用 Web UI。
+- 想批处理、导出 JSON、写脚本或长期自动化：使用 CLI。
 - 想让脚本或 AI Agent 编排：使用 `/api/v2/*`、`openapi.json` 和 `llms.txt`。
+
+Web UI、CLI 和 API 不是互斥关系。它们共享同一套后端服务层：Web UI 适合人工可视化确认，CLI/API 适合高级自动化和 Agent 编排。
+
+### Web UI 的登录凭证保存在哪里？
+
+扫码登录成功后，Web UI 会把 `SESSDATA` 和 `bili_jct` 保存在当前标签页的 `sessionStorage` 中，用于后续向本地 FastAPI 服务发送请求头。点击“退出登录”或关闭标签页都会清除这份凭证。
+
+不要在公共电脑或共享浏览器配置中使用 Web UI。如果必须使用，操作后请退出登录并清理浏览器数据。
+
+### 为什么 Web UI 推荐先预览再删除？
+
+B 站删除、取关、清空历史等操作没有项目侧的回滚能力。Web UI 默认把列表预览、筛选、勾选、二次确认和任务进度放在删除之前，是为了避免“一键误删”。
+
+关注清理尤其建议先把候选账号加入 `to-review` 分组，在 B 站 App 或网页里人工复核后，再执行最终取关。
 
 ### 为什么批量取关比较慢？
 
@@ -83,13 +97,17 @@ B 站没有真正的批量取关接口，底层只能逐个 `fid` 调用。项�
 
 ### 清理过程中可以关闭浏览器吗？
 
-当前 Web UI 对关注、收藏、动态和“一键清理所有”会提交 `/api/v2/*` 后台任务并轮询状态；关闭标签页会停止页面显示，但不会主动取消已经提交的后端任务。观看历史清理是 B 站单次调用，通常会立即返回。
+关注的大批量取关会通过 `/api/v2/followings/unfollow-task` 创建后端异步任务，关闭浏览器不会立刻取消任务，但你会失去当前页面上的实时进度视图。重新打开页面后可通过任务面板或 `/api/v2/tasks` 查看仍保存在内存中的任务。
+
+收藏、动态和单条历史删除是即时请求。请求发出后请等待页面返回结果，不要在进行中关闭标签页。
+
+注意：凭证存放在 `sessionStorage`，关闭标签页即清除，重新打开页面需要重新扫码登录。已提交的后端任务不受影响。
 
 ### 服务重启后任务还在吗？
 
 不在。`/api/v2/tasks/*` 使用进程内存保存任务状态，服务重启会丢失任务进度。已完成任务默认只保留最近 200 条，避免服务长期运行时任务列表无限增长。
 
-如果需要可追溯的长期记录，应在调用方自己落库，不要依赖 `/api/v2/tasks/*` 做持久化审计。
+任务列表不是审计日志。如果需要"到底删了什么"的长期记录，用删除审计日志：每次删除都会追加一行 JSON 到 `data/audit.jsonl`，不随进程重启丢失。见 [DEPLOY.md](DEPLOY.md#6-审计日志与恢复)。
 
 ## 开发者与 AI Agent
 

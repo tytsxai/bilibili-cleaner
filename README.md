@@ -151,16 +151,27 @@ Windows PowerShell 激活虚拟环境：
 - 就绪探针 / Readiness: `http://localhost:8000/readyz`
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
 
+## Web UI 截图 / Screenshots
+
+Web UI 现在是一个可独立使用的本地清理控制台，不再只是“一键清空”入口。它适合普通用户在浏览器里完成扫码登录、列表预览、筛选候选、选择性删除、关注分组复核和异步任务进度查看；CLI、HTTP API 和 AI Agent 仍然共享同一套后端服务层，适合更高级的自动化流程。
+
+> 截图使用脱敏演示数据，不包含真实账号 UID、昵称、Cookie 或清理记录。
+
+![Bilibili Cleaner Web dashboard](docs/assets/web-dashboard.png)
+
+![Bilibili Cleaner following audit](docs/assets/web-followings-audit.png)
+
 ## Web UI 使用流程
 
 1. 启动服务并打开 `http://localhost:8000`。
 2. 使用哔哩哔哩 App 扫描页面二维码。
 3. 手机端确认登录后，页面会显示当前 UID。
-4. 选择清理关注、收藏、动态、历史，或执行“一键清理所有”。
-5. 操作前会二次确认；关注、收藏、动态和一键清理会提交后台任务并轮询真实进度，历史清理是单次同步调用。
-6. 完成后点击“退出登录”，清除浏览器 localStorage 中的登录凭证。
+4. 在“关注审计、收藏夹、动态、观看历史”工作区加载列表并筛选候选项。
+5. 对关注账号可先加入 `to-review` 分组，在 B 站 App 或网页中人工复核后再取关。
+6. 对收藏、动态、观看历史执行选择性删除；大批量关注取关会创建异步任务并在右侧任务面板显示进度。
+7. 完成后点击“退出登录”，清除本标签页的登录凭证。凭证存放在 `sessionStorage`，关闭标签页也会自动清除。
 
-Web UI 适合快速清空；如果要先筛选、复核、分批删除，优先使用 CLI 或 `/api/v2/*` API。
+Web UI 适合可视化审计和人工确认；CLI 适合批处理脚本；`/api/v2/*` API 和 `openapi.json` 适合 AI Agent 或内部系统编排。三者互不冲突。
 
 ## CLI 用法 / Command Line
 
@@ -315,7 +326,7 @@ python3 scripts/dump_openapi.py
 不是。本项目与哔哩哔哩官方没有任何关联，调用的是 B 站公开 Web API，使用者需自行遵守平台规则。
 
 **会不会把我的账号凭证上传到第三方服务器？**
-不会。项目不提供托管服务。Web UI、后端和 CLI 都在你自己的机器上运行，请求从你的机器直接发往 bilibili.com。凭证保存在浏览器 localStorage 或 `~/.bilibili-cleaner/credentials.json`。
+不会。项目不提供托管服务。Web UI、后端和 CLI 都在你自己的机器上运行，请求从你的机器直接发往 bilibili.com。凭证保存在浏览器 `sessionStorage`（关闭标签页即清除）或 `~/.bilibili-cleaner/credentials.json`。
 
 **会导致封号吗？**
 项目默认以约 `1.5 req/s` 的低频调用接口并自动处理风控重试，正常使用更常见的是临时限流而不是封号。但任何批量自动化操作都存在平台风控风险，数据量大时建议分批执行。

@@ -91,9 +91,25 @@ Then open:
 - Swagger UI: `http://localhost:8000/docs`
 - OpenAPI JSON: `http://localhost:8000/openapi.json`
 
-The Web UI submits async tasks for followings, favorites, dynamics, and
-"clean all", then polls real task progress. Watch history clear is a single
-synchronous Bilibili call.
+## Web UI Screenshots
+
+The Web UI is a local account cleanup console, not just a set of wipe buttons. It lets regular users scan to log in, preview lists, filter candidates, delete selected items, tag followings for manual review, and watch async task progress. The CLI, HTTP API, and AI-agent workflows continue to share the same backend service layer.
+
+> Screenshots use sanitized demo data. They do not contain real account IDs, names, cookies, or cleanup records.
+
+![Bilibili Cleaner Web dashboard](docs/assets/web-dashboard.png)
+
+![Bilibili Cleaner following audit](docs/assets/web-followings-audit.png)
+
+## Web UI Workflow
+
+1. Start the service and open `http://localhost:8000`.
+2. Scan the QR code with the Bilibili mobile app.
+3. Use the Followings, Favorites, Dynamics, and History workspaces to load and review data.
+4. Filter and select candidates before running destructive actions.
+5. For followings, prefer tagging candidates into `to-review` first, then manually review them in Bilibili before unfollowing.
+6. Large unfollow batches run as async tasks and can be tracked in the task panel.
+7. Click "logout" when finished to clear credentials from this tab. They live in `sessionStorage`, so closing the tab clears them too.
 
 ## CLI
 
@@ -140,7 +156,7 @@ See [docs/API.md](docs/API.md) for curl recipes and cookbook workflows.
 
 ## Privacy and Safety
 
-This project is a local tool, not a hosted service. Web credentials are stored in browser localStorage, and CLI credentials are stored locally. API calls go from your machine to bilibili.com. Use it only for accounts you own, and review carefully before running destructive operations.
+This project is a local tool, not a hosted service. Web credentials are stored in browser `sessionStorage` (cleared when the tab closes), and CLI credentials are stored locally. API calls go from your machine to bilibili.com. Use it only for accounts you own, and review carefully before running destructive operations.
 
 ## FAQ
 
@@ -148,7 +164,7 @@ This project is a local tool, not a hosted service. Web credentials are stored i
 No. This project has no affiliation with Bilibili. It calls Bilibili's public Web APIs, and you are responsible for complying with the platform's rules.
 
 **Are my credentials sent to a third-party server?**
-No. There is no hosted service. The Web UI, backend, and CLI all run on your own machine, and requests go directly from your machine to bilibili.com. Credentials live in browser localStorage or `~/.bilibili-cleaner/credentials.json`.
+No. There is no hosted service. The Web UI, backend, and CLI all run on your own machine, and requests go directly from your machine to bilibili.com. Credentials live in browser `sessionStorage` or `~/.bilibili-cleaner/credentials.json`.
 
 **Can it get my account banned?**
 The client calls Bilibili at a conservative ~1.5 req/s and retries risk-control responses automatically, so temporary rate limiting is far more likely than a ban. Any bulk automation still carries platform risk — split very large cleanups into batches.
