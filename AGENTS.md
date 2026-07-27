@@ -17,8 +17,9 @@ yourself, then call the selective delete endpoint.
   `localhost:8000`) and a Python CLI (`bilibili-cleaner …`) that share the
   same service layer.
 - Authenticated reads/writes against the user's own Bilibili account.
-- Global rate-limiting (1.5 r/s default) + automatic retry on `-352` /
-  HTTP 412 risk-control responses.
+- Global rate-limiting (1.5 r/s default) + automatic exponential-backoff
+  retry on risk-control responses (`-352`, `-799`, `-509`, HTTP 412/429):
+  3 retries, 4 attempts total, backoff capped at 30s.
 - Async task queue for long-running batch operations (`POST …/clear` →
   `task_id`, then `GET /api/v2/tasks/{id}` to poll).
 
@@ -58,8 +59,8 @@ Poll roughly every 5–10 seconds. Worst case for 1600 unfollows: ~18 min.
 - **Credentials live in the request.** Send `SESSDATA` and `bili_jct` as
   HTTP headers (NOT cookies). 401 if missing.
 - **Tasks are in-memory.** Process restart loses task state and progress.
-  Finished task history is bounded to avoid long-running process growth.
-  Acceptable for tasks under ~30 min.
+  Only the most recent 200 finished tasks are retained. Acceptable for
+  tasks under ~30 min; don't treat `/api/v2/tasks/*` as an audit log.
 - **All deletes are permanent.** B 站 has no undo. Always offer a dry-run
   list to the user before calling write endpoints with 100+ items.
 

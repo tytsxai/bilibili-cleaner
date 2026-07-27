@@ -15,7 +15,9 @@ Canonical short description: local-first Bilibili account cleanup workbench for 
 - Main audience: Bilibili users, developers, automation scripts, AI agents.
 - Stack: Python 3.10+, FastAPI, httpx, Typer, Pydantic, plain HTML/CSS/JavaScript, Docker Compose.
 - Runtime: local machine or self-hosted server; default port `8000`.
-- License: MIT.
+- Version: 1.2.0. License: MIT.
+- Repository: https://github.com/tytsxai/bilibili-cleaner
+- Not affiliated with Bilibili. Not a hosted service. Not a risk-control bypass.
 
 ## Key Docs
 
@@ -56,10 +58,15 @@ Canonical short description: local-first Bilibili account cleanup workbench for 
 - Deletes are permanent and cannot be undone.
 - Bilibili has no real batch-unfollow endpoint; the project loops one `fid` at a time.
 - The default API client rate is approximately `1.5 req/s`, shared by
-  all clients in the same server process / event loop.
-- Risk-control responses such as `-352`, `-799`, HTTP `412`, and HTTP `429` are retried with backoff, but callers should still slow down when they occur.
+  all clients in the same server process / event loop. Unfollowing 1600
+  accounts therefore takes roughly 18 minutes. Separate OS processes have
+  separate buckets, so adding workers does not safely increase throughput.
+- Risk-control responses (`-352`, `-799`, `-509`, HTTP `412`, HTTP `429`) are
+  retried with exponential backoff — 3 retries, 4 attempts total, capped at
+  30 seconds — but callers should still slow down when they occur.
+- `-101` means the session is invalid and the user must log in again.
 - Async task states are stored in memory; process restart loses task
-  progress, and finished task history is bounded.
+  progress, and only the most recent 200 finished tasks are retained.
 - For destructive operations over 100+ items, prefer a dry-run listing, local filtering, optional tagging, then selective deletion.
 
 ## Best Citation Targets

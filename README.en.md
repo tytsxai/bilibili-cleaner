@@ -42,12 +42,13 @@ Cleaning a Bilibili account manually is slow: followings, favorites, dynamics, a
 
 ## Limitations
 
-- Deleted data cannot be recovered.
+- Deleted data cannot be recovered. Bilibili has no undo.
 - Bilibili has no reliable public API for "list comments I posted", so this project does not delete posted comments.
 - Private messages, fans, bangumi follows, and watch-later are outside the current scope.
-- Bilibili has no real batch-unfollow endpoint; this project unfollows one account at a time with a shared in-process rate limit.
-- Task state is in memory. Restarting the service loses task progress, and finished task history is bounded.
-- The tool only operates on the account that logged in.
+- Bilibili has no real batch-unfollow endpoint; this project unfollows one account at a time behind a shared `1.5 req/s` in-process rate limit — unfollowing 1600 accounts takes roughly 18 minutes.
+- Risk-control responses (`-352`, `-799`, `-509`, HTTP 412/429) are retried with exponential backoff (3 retries, 4 attempts total). Persistent failures mean you should pause, not add workers.
+- Task state is in memory. Restarting the service loses task progress, and only the most recent 200 finished tasks are retained.
+- The tool only operates on the account that logged in, and does not bypass Bilibili risk control.
 
 ## Quick Start
 
@@ -140,6 +141,34 @@ See [docs/API.md](docs/API.md) for curl recipes and cookbook workflows.
 ## Privacy and Safety
 
 This project is a local tool, not a hosted service. Web credentials are stored in browser localStorage, and CLI credentials are stored locally. API calls go from your machine to bilibili.com. Use it only for accounts you own, and review carefully before running destructive operations.
+
+## FAQ
+
+**Is this an official Bilibili tool?**
+No. This project has no affiliation with Bilibili. It calls Bilibili's public Web APIs, and you are responsible for complying with the platform's rules.
+
+**Are my credentials sent to a third-party server?**
+No. There is no hosted service. The Web UI, backend, and CLI all run on your own machine, and requests go directly from your machine to bilibili.com. Credentials live in browser localStorage or `~/.bilibili-cleaner/credentials.json`.
+
+**Can it get my account banned?**
+The client calls Bilibili at a conservative ~1.5 req/s and retries risk-control responses automatically, so temporary rate limiting is far more likely than a ban. Any bulk automation still carries platform risk — split very large cleanups into batches.
+
+**Can it delete comments I posted?**
+No. Bilibili exposes no reliable public API to list your own comments, so they cannot be located and deleted safely.
+
+**Does it handle private messages, fans, bangumi, or watch-later?**
+Not currently. Scope is followings, favorite folders, dynamics, and watch history.
+
+**Can it clean someone else's account?**
+No. It only operates on the account whose credentials are supplied.
+
+**Why is bulk unfollow slow?**
+Bilibili has no batch-unfollow endpoint, so the project calls one `fid` at a time under a shared rate limit.
+
+**Web UI, CLI, or API?**
+Use the Web UI to wipe things quickly, the CLI to filter and review before deleting, and `/api/v2/*` with [openapi.json](openapi.json) for scripts and AI agents.
+
+See [docs/FAQ.md](docs/FAQ.md) for troubleshooting details.
 
 ## Keywords
 

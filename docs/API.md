@@ -25,7 +25,9 @@ All examples assume the server is running at `http://localhost:8000`
 - Rate limit: default 1.5 req/s shared by all `BiliApiClient` instances
   in the same server process / event loop. Auto-retry on risk-control
   codes (`-352`, `-799`, `-509`, HTTP 412/429) with exponential backoff
-  (max 3 attempts). Multiple OS processes have separate buckets.
+  and full jitter (3 retries, 4 attempts total, capped at 30s). Multiple
+  OS processes have separate buckets, so extra workers trip risk control
+  rather than adding throughput.
 - For listings the response shape mirrors B 站's `data` field unless an
   explicit pydantic model documents otherwise — open `/docs` (Swagger)
   or [`openapi.json`](../openapi.json) for the exact shape.
@@ -179,8 +181,10 @@ Task state shape:
 ```
 
 Task state is in-memory and process-local. A restart loses running task
-progress; finished task history is automatically bounded so long-running
-services do not retain every historical task forever.
+progress; only the most recent 200 finished tasks are retained so a
+long-running service does not grow unboundedly. Treat `/api/v2/tasks/*`
+as live progress reporting, not as a durable audit log — if you need a
+permanent record of what was deleted, persist it on the caller side.
 
 ## Cookbooks
 
