@@ -9,6 +9,7 @@ authors = [{ name = "tytsxai" }]
 keywords = [
     "bilibili",
     "bilibili-cleaner",
+    "bilibili-account-cleanup",
     "account-cleanup",
     "bilibili-api",
     "bilibili-cli",
@@ -17,8 +18,10 @@ keywords = [
     "dynamic-delete",
     "favorites-cleanup",
     "watch-history",
+    "qrcode-login",
     "self-hosted",
     "privacy-tool",
+    "web-ui",
     "openapi",
     "ai-agent",
     "cli",
@@ -40,14 +43,14 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "fastapi>=0.104.0",
-    "uvicorn>=0.24.0",
-    "httpx>=0.25.0",
-    "qrcode>=7.4.0",
-    "pillow>=10.0.0",
-    "python-multipart>=0.0.6",
-    "typer>=0.12.0",
-    "pydantic>=2.0",
+    "fastapi>=0.104.0,<1.0",
+    "uvicorn>=0.24.0,<1.0",
+    "httpx>=0.25.0,<1.0",
+    "qrcode>=7.4.0,<9.0",
+    "pillow>=10.0.0,<14.0",
+    "python-multipart>=0.0.6,<1.0",
+    "typer>=0.12.0,<1.0",
+    "pydantic>=2.0,<3.0",
 ]
 
 [project.scripts]
@@ -70,3 +73,25 @@ include = ["backend*"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# Scoped to rules that catch real defects rather than style churn:
+# F  pyflakes (undefined names, unused imports)
+# E  pycodestyle errors
+# I  import ordering (keeps diffs small)
+# B  bugbear (mutable defaults, loop-variable capture, ...)
+# ASYNC  blocking calls inside async code — the failure mode that would
+#        stall this app's single event loop in production
+# UP  outdated syntax (keeps deprecated typing imports from creeping back)
+select = ["E", "F", "I", "B", "ASYNC", "UP"]
+ignore = [
+    "B008",  # FastAPI's Depends()/Query() defaults are the documented idiom.
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests define shared payload constants between imports for readability.
+"tests/*" = ["E402"]

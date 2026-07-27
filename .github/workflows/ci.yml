@@ -7,9 +7,21 @@ on:
     branches: [main]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements-dev.txt
+      - name: Ruff
+        run: ruff check .
+
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.10', '3.11', '3.12']
 
@@ -29,10 +41,58 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest tests/ -v --cov=backend --cov-report=xml
+          pytest tests/ -v --cov=backend --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
+
+  # The pinned set is what actually ships in the image. Resolving it separately
+  # catches a constraints.txt that has drifted out of sync with requirements.
+  pinned-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned dependencies
+        run: pip install -r backend/requirements.txt -c constraints.txt
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run tests against pinned versions
+        run: pytest tests/ -q
+
+  # Nothing else exercises the Dockerfile, so a broken build would otherwise
+  # only surface at deploy time.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t bilibili-cleaner:ci .
+      - name: Start container
+        run: docker run -d --name cleaner -p 8000:8000 bilibili-cleaner:ci
+      - name: Wait for health endpoint
+        run: |
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/healthz; then
+              echo "healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Service did not become healthy" >&2
+          docker logs cleaner >&2
+          exit 1
+      - name: Check readiness and static UI
+        run: |
+          curl -fsS http://127.0.0.1:8000/readyz
+          curl -fsS -o /dev/null http://127.0.0.1:8000/
+      - name: Verify the container does not run as root
+        run: test "$(docker exec cleaner id -u)" != "0"
+      - name: Container logs
+        if: always()
+        run: docker logs cleaner

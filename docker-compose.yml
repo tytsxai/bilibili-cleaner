@@ -1,6 +1,34 @@
 services:
   app:
     build: .
+    # Bound to loopback on purpose. The API has no authentication of its own —
+    # anyone who can reach this port can drive B 站 requests through it. Change
+    # to "8000:8000" only behind a reverse proxy that adds auth and TLS.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      # Audit trail of every delete. B 站 has no undo, so this is the only
+      # record of what was removed — keep it outside the container.
+      - ./data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=4).status == 200 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Give in-flight cleans a chance to unwind and mark their task state before
+    # the container is killed (default is 10s).
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

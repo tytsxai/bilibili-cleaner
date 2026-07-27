@@ -28,6 +28,10 @@ build/
 .env
 *.local
 
+# Runtime data (audit trail); keep it, don't commit it
+data/
+*.jsonl
+
 # OS files
 .DS_Store
 Thumbs.db

@@ -1,3 +1,5 @@
+# Keep the build context minimal and never bake secrets or runtime data
+# into the image.
 .venv/
 __pycache__/
 *.pyc
@@ -7,3 +9,7 @@ __pycache__/
 .github/
 tests/
 *.md
+.env
+.env.*
+!.env.example
+data/

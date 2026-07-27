@@ -1,0 +1,37 @@
+# Pinned dependency versions for reproducible builds.
+#
+# backend/requirements.txt and pyproject.toml declare open lower bounds so the
+# package stays installable alongside other software. That is wrong for a
+# deployment: `docker build` on two different days would produce two different
+# images, and a major release of FastAPI or Pydantic would break production at
+# build time with no code change on our side.
+#
+# Install with:   pip install -r backend/requirements.txt -c constraints.txt
+#
+# These versions are the ones the test suite is verified against. To upgrade:
+# bump here, run `pytest tests/`, rebuild the image, and commit together.
+
+annotated-types==0.8.0
+anyio==4.14.2
+certifi==2026.7.22
+click==8.4.2
+fastapi==0.140.4
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.18
+markdown-it-py==4.2.0
+mdurl==0.1.2
+pillow==12.3.0
+pydantic==2.13.4
+pydantic_core==2.46.4
+python-multipart==0.0.32
+qrcode==8.2
+rich==15.0.0
+shellingham==1.5.4
+sniffio==1.3.1
+starlette==1.3.1
+typer==0.27.0
+typing_extensions==4.16.0
+typing-inspection==0.4.2
+uvicorn==0.51.0
