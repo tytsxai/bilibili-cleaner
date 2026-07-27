@@ -13,9 +13,9 @@ from backend.api.relation_tag import (
     DELETE_TAG_URL,
     LIST_TAGS_URL,
     MOVE_USERS_URL,
-    RelationTagApi,
     TAG_USERS_URL,
     UPDATE_TAG_URL,
+    RelationTagApi,
 )
 
 pytestmark = pytest.mark.asyncio

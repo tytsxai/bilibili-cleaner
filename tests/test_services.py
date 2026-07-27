@@ -6,8 +6,8 @@ import httpx
 import pytest
 import respx
 
-from backend.api.favorite import BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL
 from backend.api.dynamic import DELETE_DYNAMIC_URL, DYNAMICS_URL
+from backend.api.favorite import BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL
 from backend.api.wbi import NAV_URL
 
 NAV_PAYLOAD = {
@@ -19,10 +19,10 @@ NAV_PAYLOAD = {
         }
     },
 }
-from backend.api.history import CLEAR_HISTORY_URL
-from backend.api.relation import MODIFY_URL, FOLLOWINGS_URL
-from backend.services.cleaner import CleanerService
 from backend.api.client import BiliApiClient
+from backend.api.history import CLEAR_HISTORY_URL
+from backend.api.relation import FOLLOWINGS_URL, MODIFY_URL
+from backend.services.cleaner import CleanerService
 
 pytestmark = pytest.mark.asyncio
 

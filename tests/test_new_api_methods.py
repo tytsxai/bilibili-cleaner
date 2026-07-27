@@ -6,11 +6,12 @@ import httpx
 import pytest
 import respx
 
-from backend.api.auth import AuthApi, NAV_URL as AUTH_NAV_URL
+from backend.api.auth import NAV_URL as AUTH_NAV_URL
+from backend.api.auth import AuthApi
 from backend.api.client import BiliApiClient
-from backend.api.favorite import FavoriteApi, RESOURCE_LIST_URL
+from backend.api.favorite import RESOURCE_LIST_URL, FavoriteApi
 from backend.api.history import DELETE_HISTORY_URL, HISTORY_CURSOR_URL, HistoryApi
-from backend.api.relation import RELATION_URL, RelationApi, MODIFY_URL
+from backend.api.relation import MODIFY_URL, RELATION_URL, RelationApi
 
 pytestmark = pytest.mark.asyncio
 CSRF = "csrf-token"

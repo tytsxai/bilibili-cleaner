@@ -4,8 +4,6 @@ import httpx
 import pytest
 import respx
 
-from backend.services.tasks import task_registry
-
 from backend.api.auth import NAV_URL as AUTH_NAV_URL
 from backend.api.favorite import BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_LIST_URL
 from backend.api.history import DELETE_HISTORY_URL, HISTORY_CURSOR_URL
@@ -13,6 +11,7 @@ from backend.api.relation import FOLLOWINGS_URL, MODIFY_URL
 from backend.api.relation_tag import COPY_USERS_URL, LIST_TAGS_URL
 from backend.api.user import ACC_INFO_URL, RELATION_STAT_URL
 from backend.api.wbi import NAV_URL
+from backend.services.tasks import task_registry
 
 pytestmark = pytest.mark.asyncio
 
@@ -152,7 +151,7 @@ async def test_followings_unfollow_task(
 
         await task_registry.wait(task_id, timeout=10)
 
-        poll = await async_client.get(f"/api/v2/tasks/{task_id}")
+        poll = await async_client.get(f"/api/v2/tasks/{task_id}", headers=headers)
         final = poll.json()
         assert final["status"] == "completed"
         assert final["result"]["ok"] == 2
@@ -275,8 +274,10 @@ async def test_tag_endpoints(
         assert body["count"] == 2
 
 
-async def test_tasks_404(async_client: httpx.AsyncClient) -> None:
-    resp = await async_client.get("/api/v2/tasks/does-not-exist")
+async def test_tasks_404(
+    async_client: httpx.AsyncClient, headers: dict[str, str]
+) -> None:
+    resp = await async_client.get("/api/v2/tasks/does-not-exist", headers=headers)
     assert resp.status_code == 404
 
 

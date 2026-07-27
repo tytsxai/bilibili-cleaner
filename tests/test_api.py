@@ -6,13 +6,13 @@ import httpx
 import pytest
 import respx
 
-from backend.api.auth import AuthApi, GENERATE_QRCODE_URL, POLL_QRCODE_URL
+from backend.api.auth import GENERATE_QRCODE_URL, POLL_QRCODE_URL, AuthApi
 from backend.api.client import BiliApiClient, BiliApiError
-from backend.api.dynamic import DynamicApi, DELETE_DYNAMIC_URL, DYNAMICS_URL
+from backend.api.dynamic import DELETE_DYNAMIC_URL, DYNAMICS_URL, DynamicApi
+from backend.api.favorite import BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL, FavoriteApi
+from backend.api.history import CLEAR_HISTORY_URL, HistoryApi
+from backend.api.relation import FOLLOWINGS_URL, MODIFY_URL, RelationApi
 from backend.api.wbi import NAV_URL
-from backend.api.favorite import FavoriteApi, BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL
-from backend.api.history import HistoryApi, CLEAR_HISTORY_URL
-from backend.api.relation import RelationApi, MODIFY_URL, FOLLOWINGS_URL
 
 pytestmark = pytest.mark.asyncio
 

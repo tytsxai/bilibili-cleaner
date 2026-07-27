@@ -5,9 +5,9 @@ import pytest
 import respx
 
 from backend.api.dynamic import DELETE_DYNAMIC_URL, DYNAMICS_URL
-from backend.api.favorite import BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL
+from backend.api.favorite import FOLDERS_URL, RESOURCE_IDS_URL
 from backend.api.history import CLEAR_HISTORY_URL
-from backend.api.relation import FOLLOWINGS_URL, MODIFY_URL, RELATION_URL
+from backend.api.relation import FOLLOWINGS_URL
 from backend.api.relation_tag import CREATE_TAG_URL, DELETE_TAG_URL, TAG_USERS_URL, UPDATE_TAG_URL
 from backend.api.user import RELATION_STAT_URL
 from backend.api.wbi import NAV_URL
@@ -104,7 +104,7 @@ async def test_dynamics_clear_task(
         assert resp.status_code == 200
         task_id = resp.json()["task_id"]
         await task_registry.wait(task_id, timeout=5)
-        info = await async_client.get(f"/api/v2/tasks/{task_id}")
+        info = await async_client.get(f"/api/v2/tasks/{task_id}", headers=headers)
         assert info.json()["status"] == "completed"
 
 
@@ -125,7 +125,9 @@ async def test_favorites_clear_task(
         )
         task_id = resp.json()["task_id"]
         await task_registry.wait(task_id, timeout=5)
-        assert (await async_client.get(f"/api/v2/tasks/{task_id}")).json()["status"] == "completed"
+        assert (
+            await async_client.get(f"/api/v2/tasks/{task_id}", headers=headers)
+        ).json()["status"] == "completed"
 
 
 async def test_followings_clear_task(
@@ -142,7 +144,9 @@ async def test_followings_clear_task(
         )
         task_id = resp.json()["task_id"]
         await task_registry.wait(task_id, timeout=5)
-        assert (await async_client.get(f"/api/v2/tasks/{task_id}")).json()["status"] == "completed"
+        assert (
+            await async_client.get(f"/api/v2/tasks/{task_id}", headers=headers)
+        ).json()["status"] == "completed"
 
 
 async def test_history_clear(
@@ -207,14 +211,18 @@ async def test_relation_get_state_not_exposed_directly_but_followings_endpoint_w
     assert resp.status_code == 404
 
 
-async def test_tasks_list_endpoint(async_client: httpx.AsyncClient) -> None:
-    resp = await async_client.get("/api/v2/tasks")
+async def test_tasks_list_endpoint(
+    async_client: httpx.AsyncClient, headers: dict[str, str]
+) -> None:
+    resp = await async_client.get("/api/v2/tasks", headers=headers)
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
 
-async def test_tasks_cancel(async_client: httpx.AsyncClient) -> None:
-    resp = await async_client.delete("/api/v2/tasks/nope")
+async def test_tasks_cancel(
+    async_client: httpx.AsyncClient, headers: dict[str, str]
+) -> None:
+    resp = await async_client.delete("/api/v2/tasks/nope", headers=headers)
     assert resp.status_code == 404
 
 
@@ -242,7 +250,9 @@ async def test_clean_all_task(
         )
         task_id = resp.json()["task_id"]
         await task_registry.wait(task_id, timeout=5)
-        info = (await async_client.get(f"/api/v2/tasks/{task_id}")).json()
+        info = (
+            await async_client.get(f"/api/v2/tasks/{task_id}", headers=headers)
+        ).json()
         assert info["status"] == "completed"
         assert info["result"] == {
             "followings": 0,

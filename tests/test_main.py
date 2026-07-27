@@ -22,7 +22,7 @@ NAV_PAYLOAD = {
 }
 from backend.api.favorite import BATCH_DELETE_URL, FOLDERS_URL, RESOURCE_IDS_URL
 from backend.api.history import CLEAR_HISTORY_URL
-from backend.api.relation import MODIFY_URL, FOLLOWINGS_URL
+from backend.api.relation import FOLLOWINGS_URL, MODIFY_URL
 
 pytestmark = pytest.mark.asyncio
 
@@ -60,7 +60,9 @@ async def test_poll_qrcode(async_client: httpx.AsyncClient) -> None:
     assert payload["data"]["status"] == 1
 
 
-async def test_clean_followings(async_client: httpx.AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_clean_followings(
+    async_client: httpx.AsyncClient, auth_headers: dict[str, str]
+) -> None:
     followings_responses = [
         httpx.Response(200, json={"code": 0, "data": {"list": [{"mid": 1}, {"mid": 2}]}}),
         httpx.Response(200, json={"code": 0, "data": {"list": []}}),
@@ -70,7 +72,9 @@ async def test_clean_followings(async_client: httpx.AsyncClient, auth_headers: d
         modify_route = router.post(MODIFY_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
         )
-        response = await async_client.post("/api/clean/followings", json={"mid": 123}, headers=auth_headers)
+        response = await async_client.post(
+            "/api/clean/followings", json={"mid": 123}, headers=auth_headers
+        )
 
     assert response.status_code == 200
     payload = response.json()
@@ -81,7 +85,9 @@ async def test_clean_followings(async_client: httpx.AsyncClient, auth_headers: d
     assert form["fid"] == ["1"]
 
 
-async def test_clean_favorites(async_client: httpx.AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_clean_favorites(
+    async_client: httpx.AsyncClient, auth_headers: dict[str, str]
+) -> None:
     with respx.mock(assert_all_called=True, assert_all_mocked=False) as router:
         router.get(FOLDERS_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"list": [{"id": 10}]}})
@@ -92,7 +98,9 @@ async def test_clean_favorites(async_client: httpx.AsyncClient, auth_headers: di
         delete_route = router.post(BATCH_DELETE_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"success": True}})
         )
-        response = await async_client.post("/api/clean/favorites", json={"mid": 456}, headers=auth_headers)
+        response = await async_client.post(
+            "/api/clean/favorites", json={"mid": 456}, headers=auth_headers
+        )
 
     assert response.status_code == 200
     payload = response.json()
@@ -102,7 +110,9 @@ async def test_clean_favorites(async_client: httpx.AsyncClient, auth_headers: di
     assert form["media_id"] == ["10"]
 
 
-async def test_clean_dynamics(async_client: httpx.AsyncClient, auth_headers: dict[str, str]) -> None:
+async def test_clean_dynamics(
+    async_client: httpx.AsyncClient, auth_headers: dict[str, str]
+) -> None:
     with respx.mock(assert_all_called=True, assert_all_mocked=False) as router:
         router.get(NAV_URL).mock(return_value=httpx.Response(200, json=NAV_PAYLOAD))
         router.get(DYNAMICS_URL).mock(
@@ -117,7 +127,9 @@ async def test_clean_dynamics(async_client: httpx.AsyncClient, auth_headers: dic
         delete_route = router.post(DELETE_DYNAMIC_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
         )
-        response = await async_client.post("/api/clean/dynamics", json={"mid": 999}, headers=auth_headers)
+        response = await async_client.post(
+            "/api/clean/dynamics", json={"mid": 999}, headers=auth_headers
+        )
 
     assert response.status_code == 200
     payload = response.json()
@@ -172,7 +184,9 @@ async def test_clean_all(async_client: httpx.AsyncClient, auth_headers: dict[str
         router.post(CLEAR_HISTORY_URL).mock(
             return_value=httpx.Response(200, json={"code": 0, "data": {"ok": True}})
         )
-        response = await async_client.post("/api/clean/all", json={"mid": 100}, headers=auth_headers)
+        response = await async_client.post(
+            "/api/clean/all", json={"mid": 100}, headers=auth_headers
+        )
 
     assert response.status_code == 200
     payload = response.json()
