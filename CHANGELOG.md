@@ -4,6 +4,33 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-07-28
+
+Web UI 从"一排清空按钮"升级为本地账号清理控制台。后端接口无变化，CLI 与
+`/api/v2/*` 的调用方不受影响。
+
+### 新增
+
+- **Web UI 控制台**：按关注审计 / 收藏夹 / 动态 / 观看历史分工作区，支持分页加载、
+  按昵称・签名・粉丝数・最近投稿筛选、跨页选择后批量处理。
+- **关注复核流程**：可先把候选 UP 加入 `to-review` 分组，在 B 站 App 或网页人工复核后再取关。
+- **任务面板**：常驻显示后台任务的状态与进度，替代此前的阻塞式轮询。
+- **脱敏演示模式**：用示例数据浏览完整界面，不需要登录，便于截图与试用。
+- README 增加 Web UI 截图（使用脱敏演示数据，不含真实账号信息）。
+
+### 修复
+
+- **任务面板错误数显示为 0**：`GET /api/v2/tasks` 返回的是摘要，`errors` 已被截断，
+  面板却在读 `errors.length`——一个失败 37 项的任务会显示成"0 个错误"。改用 `error_count`。
+- **提前中止的清理在任务列表中不可见**：任务摘要此前整个丢弃 `result`，导致"提前放弃"
+  和"正常完成"长得一模一样。摘要现在保留 `stopped_reason` 这一个字段（短字符串或小 dict），
+  其余 `result` 内容照旧丢弃。
+- **Web UI 凭据回退到 `localStorage`**：Web UI 重写基于 v1.3.0 之前的代码，覆盖了
+  v1.3.0 的凭据处理。已重新应用——凭据存 `sessionStorage`（关标签页即清除），
+  并在加载时清理旧版遗留在 `localStorage` 的凭据。
+- 校正 README / README.en / FAQ 中与代码不符的 `localStorage` 说法；FAQ 中"需要长期
+  可追溯记录请自行落库"改为指向 v1.3.0 起提供的删除审计日志。
+
 ## [1.3.0] - 2026-07-28
 
 本版本包含两部分：此前开发但从未打过 tag 的 1.2.0（`/api/v2` 资源接口、Typer CLI、
@@ -121,6 +148,7 @@
 - Docker Compose 一键部署
 - 单元测试（95%+ 覆盖率）
 
+[1.4.0]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.1.1...v1.3.0
 [1.1.1]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/tytsxai/bilibili-cleaner/compare/v1.0.0...v1.1.0

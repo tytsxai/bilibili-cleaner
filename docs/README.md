@@ -15,7 +15,7 @@ English: this page is the documentation map for Bilibili Cleaner, an open-source
 | 技术栈 | Python 3.10+、FastAPI、httpx、Typer、Pydantic、原生 HTML/CSS/JS、Docker Compose |
 | 默认服务地址 | `http://localhost:8000` |
 | 机器可读接口 | `openapi.json`，运行时也可访问 `http://localhost:8000/openapi.json` |
-| 当前版本 | 1.3.0（`pyproject.toml` 与 `FastAPI(version=...)` 保持一致） |
+| 当前版本 | 1.4.0（`pyproject.toml` 与 `FastAPI(version=...)` 保持一致） |
 | 默认限流 | 约 `1.5 req/s`，同一进程同一 event loop 内共享 |
 | 风控重试 | `-352`、`-799`、`-509`、HTTP `412/429`，指数退避 3 次重试（合计 4 次请求） |
 | 许可协议 | MIT |
