@@ -1,6 +1,11 @@
+// 凭据存放在 sessionStorage 而不是 localStorage：
+// sessionStorage 仅限当前标签页，关闭即清除；localStorage 会把 SESSDATA 长期
+// 留在浏览器 profile 里，任何一次 XSS 或共用电脑都能取走。
+// 后端刻意不落盘任何凭据，所以浏览器侧的留存时间就是真实暴露窗口。
+// 主题偏好不敏感，仍用 localStorage 以便跨标签页保持。
+const CREDENTIALS_STORAGE = window.sessionStorage;
+
 const app = {
-    // 安全警告: SESSDATA 和 bili_jct 存储在 localStorage 中
-    // 生产环境建议使用 HttpOnly Cookie 或后端 session 管理
     state: {
         qrcodeKey: null,
         pollInterval: null,
@@ -63,28 +68,33 @@ const app = {
     },
 
     loadUserFromStorage: function() {
-        const stored = localStorage.getItem('bili_cleaner_user');
+        // 迁移：早期版本把凭据写在 localStorage，这里顺手清掉残留，
+        // 否则旧用户的 SESSDATA 会一直留在浏览器里。
+        localStorage.removeItem('bili_cleaner_user');
+
+        const stored = CREDENTIALS_STORAGE.getItem('bili_cleaner_user');
         if (stored) {
             try {
                 this.state.user = JSON.parse(stored);
             } catch (e) {
                 console.error('Failed to parse user data');
-                localStorage.removeItem('bili_cleaner_user');
+                CREDENTIALS_STORAGE.removeItem('bili_cleaner_user');
             }
         }
     },
 
     saveUserToStorage: function() {
-        localStorage.setItem('bili_cleaner_user', JSON.stringify(this.state.user));
+        CREDENTIALS_STORAGE.setItem('bili_cleaner_user', JSON.stringify(this.state.user));
     },
 
     logout: function() {
         this.state.user = { mid: null, sessdata: null, bili_jct: null };
+        CREDENTIALS_STORAGE.removeItem('bili_cleaner_user');
         localStorage.removeItem('bili_cleaner_user');
         this.stopPolling();
         this.switchView('login-view');
         this.initLogin();
-        this.log('已退出登录', 'info');
+        this.log('已退出登录（凭据已从本标签页清除）', 'info');
     },
 
     switchView: function(viewId) {
@@ -228,12 +238,38 @@ const app = {
         return new Promise(resolve => setTimeout(resolve, ms));
     },
 
+    // 服务重启会丢失任务状态，网络也可能持续失败。没有上限的话页面会一直
+    // 空转，按钮永远禁用，用户也拿不到任何结论。
+    POLL_INTERVAL_MS: 3000,
+    POLL_MAX_MS: 6 * 60 * 60 * 1000,   // 1.5 req/s 下清理超大账号的宽松上限
+    POLL_MAX_CONSECUTIVE_ERRORS: 5,
+
     pollTask: async function(taskId) {
         let lastProgress = '';
+        let consecutiveErrors = 0;
+        const deadline = Date.now() + this.POLL_MAX_MS;
+
         while (true) {
-            const task = await this.requestJson(`/api/v2/tasks/${encodeURIComponent(taskId)}`, {
-                headers: this.authHeaders()
-            });
+            if (Date.now() > deadline) {
+                throw new Error('任务轮询超时，请用 GET /api/v2/tasks 查询该任务的最终状态');
+            }
+
+            let task;
+            try {
+                task = await this.requestJson(`/api/v2/tasks/${encodeURIComponent(taskId)}`, {
+                    headers: this.authHeaders()
+                });
+                consecutiveErrors = 0;
+            } catch (err) {
+                consecutiveErrors += 1;
+                if (consecutiveErrors >= this.POLL_MAX_CONSECUTIVE_ERRORS) {
+                    throw new Error(`无法获取任务状态（连续 ${consecutiveErrors} 次失败）：${err.message}`);
+                }
+                this.log(`查询任务状态失败，重试中 (${consecutiveErrors}/${this.POLL_MAX_CONSECUTIVE_ERRORS}): ${err.message}`, 'error');
+                await this.delay(this.POLL_INTERVAL_MS);
+                continue;
+            }
+
             this.updateTaskProgress(task);
 
             const currentProgress = `${task.processed || 0}/${task.total || '?'}`;
@@ -245,7 +281,7 @@ const app = {
             if (!['pending', 'running'].includes(task.status)) {
                 return task;
             }
-            await this.delay(3000);
+            await this.delay(this.POLL_INTERVAL_MS);
         }
     },
 
@@ -261,12 +297,25 @@ const app = {
         }
     },
 
+    // 后端只保留前 N 条错误明细，真实总数在 error_count 里。用 errors.length
+    // 会在大规模失败时严重少报。
+    errorCount: function(task) {
+        if (typeof task.error_count === 'number') return task.error_count;
+        return Array.isArray(task.errors) ? task.errors.length : 0;
+    },
+
+    // stopped_reason 可能是字符串（单项清理），也可能是 {资源: 原因} 对象（clean-all）。
+    describeStopped: function(reason) {
+        if (typeof reason === 'string') return reason;
+        return Object.entries(reason).map(([key, value]) => `${key}=${value}`).join(', ');
+    },
+
     logTaskCompletion: function(type, task) {
         const result = task.result || {};
         if (task.status !== 'completed') {
-            const errors = Array.isArray(task.errors) ? task.errors : [];
-            if (errors.length) {
-                this.log(`任务失败，错误数: ${errors.length}`, 'error');
+            const count = this.errorCount(task);
+            if (count) {
+                this.log(`任务失败，错误数: ${count}`, 'error');
             }
             throw new Error(`任务状态: ${task.status}`);
         }
@@ -285,11 +334,11 @@ const app = {
         }
 
         if (result.stopped_reason) {
-            this.log(`任务提前停止: ${result.stopped_reason}`, 'error');
+            this.log(`任务提前停止（未清理干净）: ${this.describeStopped(result.stopped_reason)}`, 'error');
         }
-        const errors = Array.isArray(task.errors) ? task.errors : [];
-        if (errors.length) {
-            this.log(`部分项目处理失败，错误数: ${errors.length}`, 'error');
+        const errorCount = this.errorCount(task);
+        if (errorCount) {
+            this.log(`部分项目处理失败，错误数: ${errorCount}`, 'error');
         }
     },
 
