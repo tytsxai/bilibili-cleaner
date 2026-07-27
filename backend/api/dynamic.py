@@ -8,7 +8,10 @@ from .wbi import signed_get
 DYNAMICS_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"
 DELETE_DYNAMIC_URL = "https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/rm_dynamic"
 
-FEATURES = "itemOpusStyle,opusBigCover,onlyfansVote,endFooterHidden,decorationCard,onlyfansAssetsV2,ugcDelete"
+FEATURES = (
+    "itemOpusStyle,opusBigCover,onlyfansVote,endFooterHidden,"
+    "decorationCard,onlyfansAssetsV2,ugcDelete"
+)
 
 
 class DynamicApi:

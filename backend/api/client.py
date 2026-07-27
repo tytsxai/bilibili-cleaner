@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 import httpx
 
@@ -63,17 +64,30 @@ class BiliApiClient:
     async def get_wbi_keys(self) -> tuple[str, str]:
         if self._wbi_keys is not None:
             return self._wbi_keys
+
+        from . import wbi
+
+        shared = wbi.cached_keys()
+        if shared is not None:
+            self._wbi_keys = shared
+            return shared
+
         async with self._wbi_lock:
             if self._wbi_keys is None:
-                from .wbi import fetch_wbi_keys
-
-                self._wbi_keys = await fetch_wbi_keys(self)
+                shared = wbi.cached_keys()
+                if shared is None:
+                    shared = await wbi.fetch_wbi_keys(self)
+                    wbi.store_keys(shared)
+                self._wbi_keys = shared
             return self._wbi_keys
 
     def invalidate_wbi_keys(self) -> None:
-        self._wbi_keys = None
+        from . import wbi
 
-    async def __aenter__(self) -> "BiliApiClient":
+        self._wbi_keys = None
+        wbi.invalidate_cache()
+
+    async def __aenter__(self) -> BiliApiClient:
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:

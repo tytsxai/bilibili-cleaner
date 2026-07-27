@@ -25,7 +25,9 @@ def _resolve_mid(explicit: int | None) -> int:
 
 @app.command("list")
 def list_cmd(
-    mid: int | None = typer.Option(None, help="The owning account's mid; defaults to logged-in user."),
+    mid: int | None = typer.Option(
+        None, help="The owning account's mid; defaults to logged-in user."
+    ),
     page: int = typer.Option(1),
     page_size: int = typer.Option(50, min=1, max=50),
     with_detail: bool = typer.Option(False, help="Also fetch profile + latest video (slower)."),

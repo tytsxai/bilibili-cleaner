@@ -1,13 +1,45 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import time
 import urllib.parse
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .client import BiliApiClient, BiliApiError
 
+logger = logging.getLogger(__name__)
+
 NAV_URL = "https://api.bilibili.com/x/web-interface/nav"
+
+# WBI keys are global to B 站, not per-account, and rotate roughly daily. The
+# HTTP layer builds a fresh client per request, so without a process-level
+# cache every signed call pays for an extra /nav request — doubling the
+# requests charged against the shared rate limit and against risk control.
+_WBI_CACHE_TTL = 3600.0
+_cached_keys: tuple[str, str] | None = None
+_cached_at: float = 0.0
+
+
+def cached_keys() -> tuple[str, str] | None:
+    """Return the process-wide keys if they are still fresh."""
+    if _cached_keys is None:
+        return None
+    if time.monotonic() - _cached_at > _WBI_CACHE_TTL:
+        return None
+    return _cached_keys
+
+
+def store_keys(keys: tuple[str, str]) -> None:
+    global _cached_keys, _cached_at
+    _cached_keys = keys
+    _cached_at = time.monotonic()
+
+
+def invalidate_cache() -> None:
+    global _cached_keys
+    _cached_keys = None
 
 _MIXIN_KEY_ENC_TAB = [
     46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35,

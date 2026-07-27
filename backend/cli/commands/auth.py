@@ -26,7 +26,9 @@ def _extract_cookies(data: dict) -> tuple[str | None, str | None]:
 
 
 @app.command()
-def login(poll_interval: float = typer.Option(2.0, help="Seconds between QR poll attempts.")) -> None:
+def login(
+    poll_interval: float = typer.Option(2.0, help="Seconds between QR poll attempts."),
+) -> None:
     """Generate a QR code, print it as ASCII, and poll until the user
     scans + confirms in the B 站 mobile app. Saves SESSDATA / bili_jct to
     ``~/.bilibili-cleaner/credentials.json``."""

@@ -3,8 +3,9 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Awaitable, Callable, TypeVar
+from typing import Any, TypeVar
 
 import typer
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typer
 
+from backend.logging_config import configure_logging
+
 from .commands import auth as auth_cmd
 from .commands import dynamics as dynamics_cmd
 from .commands import favorites as favorites_cmd
@@ -18,6 +20,12 @@ app = typer.Typer(
     ),
     no_args_is_help=True,
 )
+
+# The CLI drives the same service layer as the API, which logs per-item failures
+# at WARNING. Without this those warnings would vanish and a partially-failed
+# bulk delete would look clean. Logs go to stderr, so piping stdout into jq
+# still works; silence them with BILI_LOG_LEVEL=ERROR.
+configure_logging()
 
 app.add_typer(auth_cmd.app, name="auth")
 app.add_typer(users_cmd.app, name="users")

@@ -36,7 +36,10 @@ class HistoryApi:
         return data if isinstance(data, dict) else {}
 
     async def delete_history(self, kid: str) -> dict[str, Any]:
-        """Delete a single history entry. ``kid`` format: ``archive_<aid>`` or ``pgc_<epid>`` etc."""
+        """Delete a single history entry.
+
+        ``kid`` format: ``archive_<aid>``, ``pgc_<epid>``, etc.
+        """
         payload = await self._client.post(
             DELETE_HISTORY_URL,
             data={"kid": kid},
