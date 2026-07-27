@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
 
 def safe_int(value: Any) -> int | None:
