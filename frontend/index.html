@@ -3,93 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
     <title>Bilibili Cleaner Web Console</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2300a8d8'/%3E%3Ctext x='32' y='40' text-anchor='middle' font-family='Arial' font-size='22' font-weight='700' fill='white'%3EBC%3C/text%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230ea5e9'/%3E%3Ctext x='32' y='41' text-anchor='middle' font-family='Arial' font-size='24' font-weight='700' fill='white'%3EBC%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app-shell">
+    <!-- 图标精灵：全部内联，避免任何外部请求（本工具默认离线自托管运行）。 -->
+    <svg class="icon-sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+        <symbol id="i-overview" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h4A1.5 1.5 0 0 1 11 5.5v3A1.5 1.5 0 0 1 9.5 10h-4A1.5 1.5 0 0 1 4 8.5v-3Zm0 9A1.5 1.5 0 0 1 5.5 13h4A1.5 1.5 0 0 1 11 14.5v4A1.5 1.5 0 0 1 9.5 20h-4A1.5 1.5 0 0 1 4 18.5v-4Zm9-9A1.5 1.5 0 0 1 14.5 4h4A1.5 1.5 0 0 1 20 5.5v4A1.5 1.5 0 0 1 18.5 11h-4A1.5 1.5 0 0 1 13 9.5v-4Zm0 10A1.5 1.5 0 0 1 14.5 14h4a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-4a1.5 1.5 0 0 1-1.5-1.5v-3Z"/></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 19v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V19M9 9.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm13 9.5v-1.5a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+        <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.5 2.6 5.35 5.9.84-4.27 4.14 1.02 5.87L12 16.94l-5.25 2.76 1.02-5.87L3.5 9.69l5.9-.84L12 3.5Z"/></symbol>
+        <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h3.5l2.2-6 3.6 12.5 2.6-8 1.7 3.5H21"/></symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.4V12l3 1.8"/></symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.2 5 6v5.5c0 4.2 2.9 7.4 7 9.3 4.1-1.9 7-5.1 7-9.3V6l-7-2.8Z"/><path d="m9.2 12.1 2 2 3.6-3.9"/></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 19.5a7 7 0 0 1 14 0"/></symbol>
+        <symbol id="i-check-square" viewBox="0 0 24 24"><path d="M20 12v6.2A1.8 1.8 0 0 1 18.2 20H5.8A1.8 1.8 0 0 1 4 18.2V5.8A1.8 1.8 0 0 1 5.8 4h9.4"/><path d="m8.5 11.5 3 3L21 5"/></symbol>
+        <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2"/><path d="M10 2.8v3.7M14 2.8v3.7M10 17.5v3.7M14 17.5v3.7M2.8 10h3.7M2.8 14h3.7M17.5 10h3.7M17.5 14h3.7"/></symbol>
+        <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.2 2.8 20h18.4L12 4.2Z"/><path d="M12 10v4"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></symbol>
+        <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h13M13 6.5 18.5 12 13 17.5"/></symbol>
+        <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="M14.5 6.5 9 12l5.5 5.5"/></symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.6v2.2M12 19.2v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.6 12h2.2M19.2 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></symbol>
+        <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 13.6A8 8 0 1 1 10.4 4a6.6 6.6 0 0 0 9.6 9.6Z"/></symbol>
+        <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10.4 9.2 15 12l-4.6 2.8V9.2Z"/></symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14.5 16.5V19a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 19V5A1.5 1.5 0 0 1 6 3.5h7A1.5 1.5 0 0 1 14.5 5v2.5"/><path d="M10 12h10M17 8.5 20.5 12 17 15.5"/></symbol>
+        <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.5"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.5"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.5"/><path d="M14 14h3v3h-3zM20.5 14v6.5H17"/></symbol>
+        <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3.5 13.5h4l1.3 2.5h6.4l1.3-2.5h4"/><path d="M6 4.5h12l3 9v5A1.5 1.5 0 0 1 19.5 20h-15A1.5 1.5 0 0 1 3 18.5v-5l3-9Z"/></symbol>
+        <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="m7.5 10 2.5 2.2-2.5 2.3M13 15h4"/></symbol>
+        <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 6.5h15M9.5 6.5V4.8c0-.7.6-1.3 1.3-1.3h2.4c.7 0 1.3.6 1.3 1.3v1.7M6.5 6.5 7.4 19c0 .8.7 1.5 1.5 1.5h6.2c.8 0 1.5-.7 1.5-1.5l.9-12.5"/></symbol>
+        <symbol id="i-tag" viewBox="0 0 24 24"><path d="M11.6 3.5H20v8.4l-8.6 8.6a1.6 1.6 0 0 1-2.3 0l-6.1-6.1a1.6 1.6 0 0 1 0-2.3l8.6-8.6Z"/><circle cx="16.2" cy="7.8" r="1.3"/></symbol>
+        <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10.5 12 15l4.5-4.5M4.5 19.5h15"/></symbol>
+    </svg>
+
+    <div class="app-shell" id="app-shell">
         <aside class="sidebar" aria-label="主导航">
             <div class="brand">
                 <div class="brand-mark">BC</div>
-                <div>
+                <div class="brand-text">
                     <h1>Bilibili Cleaner</h1>
                     <p>本地账号清理控制台</p>
                 </div>
+                <button id="sidebar-toggle" class="sidebar-toggle" type="button" title="折叠侧边栏" aria-label="折叠侧边栏">
+                    <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"></use></svg>
+                </button>
             </div>
 
             <nav class="nav-list" id="nav-list">
-                <button class="nav-item active" data-panel="overview-panel" type="button">总览</button>
-                <button class="nav-item" data-panel="followings-panel" type="button">关注审计</button>
-                <button class="nav-item" data-panel="favorites-panel" type="button">收藏夹</button>
-                <button class="nav-item" data-panel="dynamics-panel" type="button">动态</button>
-                <button class="nav-item" data-panel="history-panel" type="button">观看历史</button>
+                <button class="nav-item active" data-panel="overview-panel" data-title="总览" type="button" title="总览">
+                    <svg class="icon" aria-hidden="true"><use href="#i-overview"></use></svg>
+                    <span class="nav-label">总览</span>
+                </button>
+                <button class="nav-item" data-panel="followings-panel" data-title="关注审计" type="button" title="关注审计">
+                    <svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>
+                    <span class="nav-label">关注审计</span>
+                </button>
+                <button class="nav-item" data-panel="favorites-panel" data-title="收藏夹" type="button" title="收藏夹">
+                    <svg class="icon" aria-hidden="true"><use href="#i-star"></use></svg>
+                    <span class="nav-label">收藏夹</span>
+                </button>
+                <button class="nav-item" data-panel="dynamics-panel" data-title="动态" type="button" title="动态">
+                    <svg class="icon" aria-hidden="true"><use href="#i-pulse"></use></svg>
+                    <span class="nav-label">动态</span>
+                </button>
+                <button class="nav-item" data-panel="history-panel" data-title="观看历史" type="button" title="观看历史">
+                    <svg class="icon" aria-hidden="true"><use href="#i-clock"></use></svg>
+                    <span class="nav-label">观看历史</span>
+                </button>
             </nav>
 
             <div class="sidebar-card">
-                <strong>安全原则</strong>
+                <div class="sidebar-card-head">
+                    <svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg>
+                    <strong>安全原则</strong>
+                </div>
                 <p>先查看和筛选，再选择性操作。超过 100 项的删除建议先加入复核分组。</p>
             </div>
         </aside>
 
         <div class="main-shell">
             <header class="topbar">
-                <div>
-                    <p class="eyebrow">Self-hosted Web UI · CLI / API / AI Agent 共享同一后端</p>
+                <div class="topbar-title">
+                    <p class="eyebrow"><span class="dot"></span>Self-hosted Web UI · CLI / API / AI Agent 共享同一后端</p>
                     <h2 id="page-title">本地账号清理控制台</h2>
                 </div>
                 <div class="topbar-actions">
-                    <button id="demo-toggle" class="btn btn-secondary" type="button">演示模式</button>
-                    <button id="theme-toggle" class="icon-btn" title="切换主题" type="button">◐</button>
-                    <button id="logout-btn" class="btn btn-ghost hidden" type="button">退出登录</button>
+                    <button id="demo-toggle" class="btn btn-secondary" type="button">
+                        <svg class="icon" aria-hidden="true"><use href="#i-play"></use></svg>演示模式
+                    </button>
+                    <button id="theme-toggle" class="icon-btn" title="切换主题" aria-label="切换主题" type="button">
+                        <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"></use></svg>
+                        <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"></use></svg>
+                    </button>
+                    <button id="logout-btn" class="btn btn-ghost hidden" type="button">
+                        <svg class="icon" aria-hidden="true"><use href="#i-logout"></use></svg>退出登录
+                    </button>
                 </div>
             </header>
 
             <main>
                 <section id="login-view" class="login-layout">
                     <div class="login-copy">
-                        <p class="eyebrow">Local-first privacy tool</p>
-                        <h2>扫码登录后，在浏览器里完成审计、复核和清理。</h2>
+                        <p class="eyebrow"><span class="dot"></span>Local-first privacy tool</p>
+                        <h2>扫码登录后，在浏览器里完成<em>审计、复核和清理</em>。</h2>
                         <p>Web UI 适合普通用户可视化操作；CLI 和 API 适合脚本、批处理和 AI Agent 编排。三者互不冲突，全部复用本地 FastAPI 服务。</p>
                         <div class="feature-row">
-                            <span>关注筛选</span>
-                            <span>收藏预览</span>
-                            <span>任务进度</span>
-                            <span>风控提示</span>
+                            <span><svg class="icon" aria-hidden="true"><use href="#i-users"></use></svg>关注筛选</span>
+                            <span><svg class="icon" aria-hidden="true"><use href="#i-star"></use></svg>收藏预览</span>
+                            <span><svg class="icon" aria-hidden="true"><use href="#i-cpu"></use></svg>任务进度</span>
+                            <span><svg class="icon" aria-hidden="true"><use href="#i-shield"></use></svg>风控提示</span>
                         </div>
                     </div>
 
                     <div class="login-card">
-                        <h3>哔哩哔哩 App 扫码登录</h3>
+                        <div class="login-card-head">
+                            <svg class="icon" aria-hidden="true"><use href="#i-qr"></use></svg>
+                            <h3>哔哩哔哩 App 扫码登录</h3>
+                        </div>
                         <div class="qrcode-box" id="qrcode-wrapper">
                             <img id="qrcode-img" src="" alt="登录二维码" class="hidden">
                             <div id="qrcode-loading">获取二维码中...</div>
                             <button id="qrcode-expired" class="qrcode-overlay hidden" type="button">二维码已过期<br>点击刷新</button>
                         </div>
-                        <p id="login-status" class="muted">请使用哔哩哔哩 App 扫码</p>
+                        <p id="login-status" class="muted login-status">请使用哔哩哔哩 App 扫码</p>
                         <button id="demo-login-btn" class="btn btn-secondary full" type="button">使用脱敏演示数据预览</button>
+                        <p class="login-note">凭据只存在当前标签页，关闭即清除；后端不落盘任何凭据。</p>
                     </div>
                 </section>
 
                 <section id="dashboard-view" class="dashboard hidden">
                     <section class="status-grid">
                         <article class="metric-card">
-                            <span>当前账号</span>
+                            <div class="metric-head">
+                                <svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg>
+                                <span>当前账号</span>
+                            </div>
                             <strong id="user-label">-</strong>
                             <small id="session-label">等待登录</small>
                         </article>
                         <article class="metric-card">
-                            <span>已选候选</span>
+                            <div class="metric-head">
+                                <svg class="icon" aria-hidden="true"><use href="#i-check-square"></use></svg>
+                                <span>已选候选</span>
+                            </div>
                             <strong id="selected-count">0</strong>
                             <small>跨当前页面选择后可批量处理</small>
                         </article>
                         <article class="metric-card">
-                            <span>后台任务</span>
+                            <div class="metric-head">
+                                <svg class="icon" aria-hidden="true"><use href="#i-cpu"></use></svg>
+                                <span>后台任务</span>
+                            </div>
                             <strong id="task-count">0</strong>
                             <small id="task-summary">暂无运行任务</small>
                         </article>
                         <article class="metric-card warn">
-                            <span>删除风险</span>
+                            <div class="metric-head">
+                                <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>
+                                <span>删除风险</span>
+                            </div>
                             <strong>不可恢复</strong>
                             <small>写操作前会显示对象数量和二次确认</small>
                         </article>
@@ -100,20 +172,90 @@
                             <article class="workspace-card">
                                 <h3>推荐工作流</h3>
                                 <ol class="workflow-list">
-                                    <li>先在各工作区加载列表并筛选候选项。</li>
-                                    <li>关注清理优先加入 <code>to-review</code> 分组。</li>
-                                    <li>人工确认后再选择性取关或删除。</li>
-                                    <li>大批量操作使用异步任务并观察进度。</li>
+                                    <li>
+                                        先在各工作区加载列表并筛选候选项。
+                                        <small>筛选只在本地内存里进行，不会写回 B 站。</small>
+                                    </li>
+                                    <li>
+                                        关注清理优先加入 <code>to-review</code> 分组。
+                                        <small>分组是可逆操作，适合先攒一批再复核。</small>
+                                    </li>
+                                    <li>
+                                        人工确认后再选择性取关或删除。
+                                        <small>写操作会显示对象数量并要求二次确认。</small>
+                                    </li>
+                                    <li>
+                                        大批量操作使用异步任务并观察进度。
+                                        <small>任务按限流逐个执行，右侧面板可看进度和错误数。</small>
+                                    </li>
                                 </ol>
                             </article>
                             <article class="workspace-card">
                                 <h3>能力入口</h3>
                                 <div class="capability-list">
-                                    <button class="quick-link" data-panel="followings-panel" type="button">审计关注质量</button>
-                                    <button class="quick-link" data-panel="favorites-panel" type="button">清理收藏资源</button>
-                                    <button class="quick-link" data-panel="dynamics-panel" type="button">删除历史动态</button>
-                                    <button class="quick-link" data-panel="history-panel" type="button">整理观看历史</button>
+                                    <button class="quick-link" data-panel="followings-panel" type="button">
+                                        <svg class="icon quick-icon" aria-hidden="true"><use href="#i-users"></use></svg>
+                                        <span class="quick-text">
+                                            <strong>审计关注质量</strong>
+                                            <small>按粉丝数、停更天数筛出候选</small>
+                                        </span>
+                                        <svg class="icon quick-arrow" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                                    </button>
+                                    <button class="quick-link" data-panel="favorites-panel" type="button">
+                                        <svg class="icon quick-icon" aria-hidden="true"><use href="#i-star"></use></svg>
+                                        <span class="quick-text">
+                                            <strong>清理收藏资源</strong>
+                                            <small>按收藏夹分页预览后勾选删除</small>
+                                        </span>
+                                        <svg class="icon quick-arrow" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                                    </button>
+                                    <button class="quick-link" data-panel="dynamics-panel" type="button">
+                                        <svg class="icon quick-icon" aria-hidden="true"><use href="#i-pulse"></use></svg>
+                                        <span class="quick-text">
+                                            <strong>删除历史动态</strong>
+                                            <small>先看摘要再删单条或批量</small>
+                                        </span>
+                                        <svg class="icon quick-arrow" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                                    </button>
+                                    <button class="quick-link" data-panel="history-panel" type="button">
+                                        <svg class="icon quick-icon" aria-hidden="true"><use href="#i-clock"></use></svg>
+                                        <span class="quick-text">
+                                            <strong>整理观看历史</strong>
+                                            <small>单条删除，清空需强确认</small>
+                                        </span>
+                                        <svg class="icon quick-arrow" aria-hidden="true"><use href="#i-arrow-right"></use></svg>
+                                    </button>
                                 </div>
+                            </article>
+                        </div>
+
+                        <div class="integration-grid">
+                            <article class="integration-card">
+                                <div class="integration-head">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-terminal"></use></svg>
+                                    <strong>CLI</strong>
+                                    <span class="chip">批处理</span>
+                                </div>
+                                <p>脚本化清理，与 Web UI 共享同一服务层。</p>
+                                <code class="integration-code">bilibili-cleaner followings list</code>
+                            </article>
+                            <article class="integration-card">
+                                <div class="integration-head">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-cpu"></use></svg>
+                                    <strong>HTTP API</strong>
+                                    <span class="chip">自托管</span>
+                                </div>
+                                <p>本地 FastAPI 服务，带 Swagger 文档与健康探针。</p>
+                                <code class="integration-code">GET /api/v2/followings?page=1</code>
+                            </article>
+                            <article class="integration-card">
+                                <div class="integration-head">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-pulse"></use></svg>
+                                    <strong>AI Agent</strong>
+                                    <span class="chip">可编排</span>
+                                </div>
+                                <p>用 OpenAPI 描述直接接入 Agent 或内部系统。</p>
+                                <code class="integration-code">openapi.json · llms.txt</code>
                             </article>
                         </div>
                     </section>
@@ -125,9 +267,15 @@
                                 <p>分页查看关注，按名称、签名、粉丝数和最近投稿筛选，再加入复核分组或异步取关。</p>
                             </div>
                             <div class="button-row">
-                                <button id="load-followings-btn" class="btn btn-primary" type="button">加载关注</button>
-                                <button id="tag-followings-btn" class="btn btn-secondary" type="button" disabled>加入 to-review</button>
-                                <button id="unfollow-selected-btn" class="btn btn-danger" type="button" disabled>异步取关</button>
+                                <button id="load-followings-btn" class="btn btn-primary" type="button">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>加载关注
+                                </button>
+                                <button id="tag-followings-btn" class="btn btn-secondary" type="button" disabled>
+                                    <svg class="icon" aria-hidden="true"><use href="#i-tag"></use></svg>加入 to-review
+                                </button>
+                                <button id="unfollow-selected-btn" class="btn btn-danger" type="button" disabled>
+                                    <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>异步取关
+                                </button>
                             </div>
                         </div>
 
@@ -135,17 +283,17 @@
                             <label>搜索<input id="following-search" type="search" placeholder="昵称 / 签名 / UID"></label>
                             <label>粉丝低于<input id="following-fans-max" type="number" min="0" placeholder="不限"></label>
                             <label>最近投稿早于<input id="following-stale-days" type="number" min="1" placeholder="天数"></label>
-                            <label class="check-line"><input id="following-with-detail" type="checkbox" checked> 加载详情</label>
+                            <label class="check-line"><input id="following-with-detail" type="checkbox" checked><span>加载详情</span></label>
                         </div>
 
                         <div class="table-shell">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th><input id="followings-select-page" type="checkbox" aria-label="选择当前页"></th>
+                                        <th class="col-check"><input id="followings-select-page" type="checkbox" aria-label="选择当前页"></th>
                                         <th>UP 主</th>
-                                        <th>粉丝</th>
-                                        <th>投稿</th>
+                                        <th class="col-num">粉丝</th>
+                                        <th class="col-num">投稿</th>
                                         <th>最近视频</th>
                                         <th>说明</th>
                                     </tr>
@@ -167,16 +315,22 @@
                                 <p>先选择收藏夹，再分页查看资源；支持关键词搜索和勾选删除。</p>
                             </div>
                             <div class="button-row">
-                                <button id="load-folders-btn" class="btn btn-primary" type="button">加载收藏夹</button>
-                                <button id="delete-favorites-btn" class="btn btn-danger" type="button" disabled>删除所选资源</button>
+                                <button id="load-folders-btn" class="btn btn-primary" type="button">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>加载收藏夹
+                                </button>
+                                <button id="delete-favorites-btn" class="btn btn-danger" type="button" disabled>
+                                    <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>删除所选资源
+                                </button>
                             </div>
                         </div>
                         <div class="split-layout">
                             <div class="side-list" id="folders-list"></div>
-                            <div>
+                            <div class="split-main">
                                 <div class="toolbar">
                                     <label>关键词<input id="favorite-keyword" type="search" placeholder="标题 / UP 主"></label>
-                                    <button id="search-favorites-btn" class="btn btn-secondary" type="button">搜索</button>
+                                    <button id="search-favorites-btn" class="btn btn-secondary" type="button">
+                                        <svg class="icon" aria-hidden="true"><use href="#i-search"></use></svg>搜索
+                                    </button>
                                 </div>
                                 <div class="resource-list" id="favorite-items"></div>
                                 <div class="pager">
@@ -195,8 +349,12 @@
                                 <p>按游标加载当前账号动态，先预览内容摘要，再删除单条或所选动态。</p>
                             </div>
                             <div class="button-row">
-                                <button id="load-dynamics-btn" class="btn btn-primary" type="button">加载动态</button>
-                                <button id="delete-dynamics-btn" class="btn btn-danger" type="button" disabled>删除所选动态</button>
+                                <button id="load-dynamics-btn" class="btn btn-primary" type="button">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>加载动态
+                                </button>
+                                <button id="delete-dynamics-btn" class="btn btn-danger" type="button" disabled>
+                                    <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>删除所选动态
+                                </button>
                             </div>
                         </div>
                         <div id="dynamics-list" class="resource-list"></div>
@@ -212,8 +370,12 @@
                                 <p>查看最近观看记录，支持单条删除；清空全部历史会要求强确认。</p>
                             </div>
                             <div class="button-row">
-                                <button id="load-history-btn" class="btn btn-primary" type="button">加载历史</button>
-                                <button id="clear-history-btn" class="btn btn-danger" type="button">清空全部历史</button>
+                                <button id="load-history-btn" class="btn btn-primary" type="button">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-download"></use></svg>加载历史
+                                </button>
+                                <button id="clear-history-btn" class="btn btn-danger" type="button">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-trash"></use></svg>清空全部历史
+                                </button>
                             </div>
                         </div>
                         <div id="history-list" class="resource-list"></div>
@@ -227,20 +389,27 @@
 
         <aside class="activity-panel">
             <div class="activity-head">
-                <h3>任务与日志</h3>
-                <button id="clear-log-btn" class="btn btn-ghost" type="button">清空</button>
+                <h3><svg class="icon" aria-hidden="true"><use href="#i-cpu"></use></svg>任务与日志</h3>
+                <button id="clear-log-btn" class="btn btn-ghost btn-sm" type="button">清空</button>
             </div>
-            <div id="task-list" class="task-list">
-                <p class="empty-state">暂无任务</p>
+            <div class="activity-section">
+                <p class="activity-label"><svg class="icon" aria-hidden="true"><use href="#i-inbox"></use></svg>后台任务</p>
+                <div id="task-list" class="task-list">
+                    <p class="empty-state">暂无任务</p>
+                </div>
             </div>
-            <div id="log-container" class="log-container">
-                <div class="log-placeholder">准备就绪，等待指令...</div>
+            <div class="activity-section activity-log">
+                <p class="activity-label"><svg class="icon" aria-hidden="true"><use href="#i-terminal"></use></svg>运行日志</p>
+                <div id="log-container" class="log-container">
+                    <div class="log-placeholder">准备就绪，等待指令...</div>
+                </div>
             </div>
         </aside>
     </div>
 
     <div id="confirm-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
         <div class="modal">
+            <div class="modal-icon"><svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg></div>
             <h3 id="confirm-title">确认操作</h3>
             <p id="confirm-message"></p>
             <input id="confirm-input" class="hidden" type="text" autocomplete="off">

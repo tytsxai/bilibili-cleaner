@@ -11,7 +11,8 @@ const app = {
         qrcodeKey: null,
         pollInterval: null,
         taskPollInterval: null,
-        theme: "light",
+        theme: "dark",
+        sidebarCollapsed: false,
         activePanel: "overview-panel",
         demo: false,
         user: {
@@ -129,6 +130,7 @@ const app = {
 
     init() {
         this.initTheme();
+        this.initSidebar();
         this.loadUserFromStorage();
         this.bindEvents();
 
@@ -147,6 +149,7 @@ const app = {
 
     bindEvents() {
         document.getElementById("theme-toggle").addEventListener("click", () => this.toggleTheme());
+        document.getElementById("sidebar-toggle").addEventListener("click", () => this.toggleSidebar());
         document.getElementById("logout-btn").addEventListener("click", () => this.logout());
         document.getElementById("demo-toggle").addEventListener("click", () => this.enterDemoMode());
         document.getElementById("demo-login-btn").addEventListener("click", () => this.enterDemoMode());
@@ -185,14 +188,36 @@ const app = {
         document.getElementById("clear-history-btn").addEventListener("click", () => this.clearHistory());
     },
 
+    // 控制台默认深色；只有用户显式选过，或系统明确偏好浅色时才用浅色。
     initTheme() {
         const saved = localStorage.getItem("bili_cleaner_theme");
-        if (saved) {
+        if (saved === "light" || saved === "dark") {
             this.state.theme = saved;
-        } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-            this.state.theme = "dark";
+        } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+            this.state.theme = "light";
         }
         this.applyTheme();
+    },
+
+    initSidebar() {
+        this.state.sidebarCollapsed = localStorage.getItem("bili_cleaner_sidebar") === "collapsed";
+        this.applySidebar();
+    },
+
+    toggleSidebar() {
+        this.state.sidebarCollapsed = !this.state.sidebarCollapsed;
+        localStorage.setItem("bili_cleaner_sidebar", this.state.sidebarCollapsed ? "collapsed" : "expanded");
+        this.applySidebar();
+    },
+
+    applySidebar() {
+        const shell = document.getElementById("app-shell");
+        const toggle = document.getElementById("sidebar-toggle");
+        shell.classList.toggle("sidebar-collapsed", this.state.sidebarCollapsed);
+        const label = this.state.sidebarCollapsed ? "展开侧边栏" : "折叠侧边栏";
+        toggle.title = label;
+        toggle.setAttribute("aria-label", label);
+        toggle.setAttribute("aria-expanded", String(!this.state.sidebarCollapsed));
     },
 
     toggleTheme() {
@@ -203,7 +228,11 @@ const app = {
 
     applyTheme() {
         document.documentElement.setAttribute("data-theme", this.state.theme);
-        document.getElementById("theme-toggle").textContent = this.state.theme === "light" ? "◐" : "◑";
+        // 图标由 CSS 按 data-theme 切换，这里只更新无障碍文案。
+        const label = this.state.theme === "light" ? "切换到深色主题" : "切换到浅色主题";
+        const toggle = document.getElementById("theme-toggle");
+        toggle.title = label;
+        toggle.setAttribute("aria-label", label);
     },
 
     loadUserFromStorage() {
@@ -454,7 +483,7 @@ const app = {
         document.querySelectorAll(".panel").forEach((panel) => panel.classList.toggle("active", panel.id === panelId));
         document.querySelectorAll(".nav-item").forEach((button) => button.classList.toggle("active", button.dataset.panel === panelId));
         const active = document.querySelector(`.nav-item[data-panel="${panelId}"]`);
-        document.getElementById("page-title").textContent = active ? active.textContent : "本地账号清理控制台";
+        document.getElementById("page-title").textContent = (active && active.dataset.title) || "本地账号清理控制台";
     },
 
     async loadFollowings(page) {
@@ -1017,8 +1046,24 @@ const app = {
         return wrap;
     },
 
+    // B 站返回的是 DYNAMIC_TYPE_* 枚举，直接展示可读性很差；
+    // 未收录的类型仍原样显示，便于排查新类型。
+    dynamicTypeLabels: {
+        DYNAMIC_TYPE_WORD: "文字动态",
+        DYNAMIC_TYPE_DRAW: "图文动态",
+        DYNAMIC_TYPE_AV: "视频投稿",
+        DYNAMIC_TYPE_FORWARD: "转发动态",
+        DYNAMIC_TYPE_ARTICLE: "专栏文章",
+        DYNAMIC_TYPE_MUSIC: "音频投稿",
+        DYNAMIC_TYPE_LIVE_RCMD: "直播推荐",
+        DYNAMIC_TYPE_PGC: "番剧 / 影视",
+        DYNAMIC_TYPE_COMMON_SQUARE: "应用动态",
+        DYNAMIC_TYPE_NONE: "已失效动态"
+    },
+
     dynamicTitle(item) {
-        return item.type || item.card_type || "动态";
+        const type = item.type || item.card_type || "";
+        return this.dynamicTypeLabels[type] || type || "动态";
     },
 
     dynamicText(item) {
