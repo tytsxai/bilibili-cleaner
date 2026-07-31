@@ -43,8 +43,12 @@ jobs:
         run: |
           pytest tests/ -v --cov=backend --cov-report=xml --cov-report=term
 
+      # v5 still pins actions/github-script@v7 internally, which the runner
+      # force-migrates off Node 20 with a deprecation warning on every run.
+      # v6 moved that to github-script@v8 (Node 24); v7 is that plus a
+      # re-issued GPG key. Inputs below are unchanged across all three.
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
