@@ -157,9 +157,17 @@ Web UI 现在是一个可独立使用的本地清理控制台，不再只是“�
 
 界面默认深色，可在右上角切换浅色主题；侧边栏可折叠，工作区、指标卡和任务日志面板在窄屏下会自动重排。
 
-> 截图使用脱敏演示数据，不包含真实账号 UID、昵称、Cookie 或清理记录。可用 `http://localhost:8000/?demo=1` 直接进入同样的演示模式。
+> 截图使用脱敏演示数据，不包含真实账号 UID、昵称、Cookie 或清理记录。可用 `http://localhost:8000/?demo=1` 直接进入同样的演示模式。登录页截图中的二维码是指向本仓库的占位图，不是可用的登录二维码。
+
+扫码登录页：
+
+![Bilibili Cleaner login](docs/assets/web-login.png)
+
+总览：
 
 ![Bilibili Cleaner Web dashboard](docs/assets/web-dashboard.png)
+
+关注审计：
 
 ![Bilibili Cleaner following audit](docs/assets/web-followings-audit.png)
 

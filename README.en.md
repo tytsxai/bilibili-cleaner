@@ -97,9 +97,17 @@ The Web UI is a local account cleanup console, not just a set of wipe buttons. I
 
 The console is dark by default with a light theme toggle in the top-right corner. The sidebar collapses, and the workspaces, metric cards, and task/log panel reflow on narrow screens.
 
-> Screenshots use sanitized demo data. They do not contain real account IDs, names, cookies, or cleanup records. Open `http://localhost:8000/?demo=1` to explore the same demo mode locally.
+> Screenshots use sanitized demo data. They do not contain real account IDs, names, cookies, or cleanup records. Open `http://localhost:8000/?demo=1` to explore the same demo mode locally. The QR code in the login screenshot is a placeholder pointing at this repository, not a usable login code.
+
+QR login:
+
+![Bilibili Cleaner login](docs/assets/web-login.png)
+
+Overview:
 
 ![Bilibili Cleaner Web dashboard](docs/assets/web-dashboard.png)
+
+Following audit:
 
 ![Bilibili Cleaner following audit](docs/assets/web-followings-audit.png)
 
