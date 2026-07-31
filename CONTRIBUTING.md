@@ -25,6 +25,20 @@ pip install -r requirements-dev.txt
 pytest tests/ -v --cov=backend
 ```
 
+## 前端自检
+
+Web UI 是纯静态 HTML/CSS/JS，没有构建步骤，改坏了不会有任何东西报错。改动
+`frontend/` 后请跑一次（CI 也会跑）：
+
+```bash
+node --check frontend/app.js && python scripts/check_frontend.py
+```
+
+它检查 `app.js` 语法、`getElementById` 引用的 id 是否都存在于 `index.html`、
+标签是否闭合、图标 symbol 引用、以及 `style.css` 里的 CSS 变量是否都有定义。
+界面本身可以用 `http://localhost:8000/?demo=1` 在脱敏演示数据上验证，
+`?panel=followings-panel` 之类的参数能直接打开指定工作区。
+
 ## 提交规范
 
 提交信息请遵循以下格式：

@@ -49,6 +49,20 @@ jobs:
           files: ./coverage.xml
           fail_ci_if_error: false
 
+  # The Web UI has no build step, so nothing else would catch a broken id
+  # contract, an unbalanced tag, or a typo'd CSS variable before runtime.
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Check app.js syntax
+        run: node --check frontend/app.js
+      - name: Check markup, id contract, icons and CSS variables
+        run: python scripts/check_frontend.py
+
   # The pinned set is what actually ships in the image. Resolving it separately
   # catches a constraints.txt that has drifted out of sync with requirements.
   pinned-install:
