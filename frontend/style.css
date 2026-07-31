@@ -63,11 +63,13 @@
     --text-2: #475569;
     --muted: #64748b;
 
-    --primary: #0284c7;
-    --primary-strong: #0369a1;
+    /* 浅色下主色同时用作正文级文字（日志、代码、图标），#0284c7 对白只有
+       4.1:1，压不住 AA，取深一档的 sky-700。 */
+    --primary: #0369a1;
+    --primary-strong: #075985;
     --primary-deep: #1d4ed8;
-    --primary-soft: rgba(2, 132, 199, 0.09);
-    --primary-ring: rgba(2, 132, 199, 0.28);
+    --primary-soft: rgba(3, 105, 161, 0.09);
+    --primary-ring: rgba(3, 105, 161, 0.3);
 
     --danger: #e11d48;
     --danger-strong: #be123c;
@@ -156,11 +158,6 @@ code {
     stroke-width: 1.7;
     stroke-linecap: round;
     stroke-linejoin: round;
-}
-
-svg#i-overview,
-.nav-item .icon use[href="#i-overview"] {
-    stroke: none;
 }
 
 /* 概览图标是实心块，单独处理 */
@@ -546,18 +543,25 @@ svg#i-overview,
     font-size: 12px;
 }
 
+/* 渐变两端都要能撑住 13px 白字：#0369a1 对白 5.9:1，#1d4ed8 6.7:1，都过 AA。
+   悬停不提亮（提亮会把对比压到 3:1 以下），改用加深 + 阴影 + 位移反馈。 */
 .btn-primary {
     border-color: transparent;
-    background: linear-gradient(135deg, var(--primary-strong), var(--primary-deep));
-    color: #f7fcff;
+    background: linear-gradient(135deg, #0369a1, #1d4ed8);
+    color: #ffffff;
     font-weight: 600;
     box-shadow: 0 8px 20px -12px rgba(14, 165, 233, 0.9);
 }
 
 .btn-primary:hover {
     border-color: transparent;
-    background: linear-gradient(135deg, var(--primary), var(--primary-strong));
-    box-shadow: 0 10px 24px -10px rgba(14, 165, 233, 0.85);
+    background: linear-gradient(135deg, #075985, #1a44bd);
+    box-shadow: 0 12px 26px -10px rgba(14, 165, 233, 0.95);
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
 }
 
 .btn-secondary {
@@ -703,6 +707,20 @@ input[type="checkbox"]:checked {
 }
 
 input[type="checkbox"]:checked::after {
+    transform: scale(1);
+}
+
+/* 半选态用横杠表示，区别于完整勾选 */
+input[type="checkbox"]:indeterminate {
+    border-color: var(--primary-strong);
+    background: var(--primary-strong);
+}
+
+input[type="checkbox"]:indeterminate::after {
+    width: 8px;
+    height: 2px;
+    border-radius: 1px;
+    clip-path: none;
     transform: scale(1);
 }
 
@@ -1250,11 +1268,15 @@ input[type="checkbox"]:focus-visible {
    表格
    ========================================================================== */
 
+/* 限高让长列表在表内滚动，表头才能真正吸顶（sticky 只对最近的滚动容器生效）。 */
 .table-shell {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface);
     overflow: auto;
+    /* clamp 的下限是安全网：某些嵌入环境里 vh 会解析成 0，
+       纯 min(62vh, …) 会把整张表压成 0 高。 */
+    max-height: clamp(320px, 62vh, 720px);
 }
 
 table {
@@ -1521,6 +1543,11 @@ td .empty-state {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     gap: 8px;
+}
+
+/* 日志区吃掉面板剩余高度，任务列表保持在上方 */
+.activity-log {
+    min-height: 120px;
 }
 
 .activity-label {
@@ -1845,6 +1872,11 @@ td .empty-state {
 
     .login-card {
         max-width: 420px;
+    }
+
+    /* 窄屏页面本身就在滚动，再叠一层表内滚动只会让操作变别扭 */
+    .table-shell {
+        max-height: none;
     }
 
     .resource-item {

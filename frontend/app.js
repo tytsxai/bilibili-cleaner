@@ -43,8 +43,7 @@ const app = {
         },
         history: {
             items: [],
-            cursor: { max: 0, view_at: 0 },
-            selected: new Set()
+            cursor: { max: 0, view_at: 0 }
         },
         tasks: new Map()
     },
@@ -481,7 +480,12 @@ const app = {
     switchPanel(panelId) {
         this.state.activePanel = panelId;
         document.querySelectorAll(".panel").forEach((panel) => panel.classList.toggle("active", panel.id === panelId));
-        document.querySelectorAll(".nav-item").forEach((button) => button.classList.toggle("active", button.dataset.panel === panelId));
+        document.querySelectorAll(".nav-item").forEach((button) => {
+            const isActive = button.dataset.panel === panelId;
+            button.classList.toggle("active", isActive);
+            if (isActive) button.setAttribute("aria-current", "page");
+            else button.removeAttribute("aria-current");
+        });
         const active = document.querySelector(`.nav-item[data-panel="${panelId}"]`);
         document.getElementById("page-title").textContent = (active && active.dataset.title) || "本地账号清理控制台";
     },
@@ -546,7 +550,11 @@ const app = {
         });
 
         document.getElementById("followings-page-label").textContent = `第 ${this.state.followings.page} 页${this.state.followings.total ? ` / 共 ${this.state.followings.total}` : ""}`;
-        document.getElementById("followings-select-page").checked = items.length > 0 && items.every((item) => this.state.followings.selected.has(Number(item.mid)));
+        const selectPage = document.getElementById("followings-select-page");
+        const selectedOnPage = items.filter((item) => this.state.followings.selected.has(Number(item.mid))).length;
+        selectPage.checked = items.length > 0 && selectedOnPage === items.length;
+        // 半选态：当前页只选了一部分，全选框不应显示成“没选”。
+        selectPage.indeterminate = selectedOnPage > 0 && selectedOnPage < items.length;
         this.updateSelectionState();
     },
 
@@ -981,6 +989,7 @@ const app = {
             const input = document.getElementById("confirm-input");
             const ok = document.getElementById("confirm-ok");
             const cancel = document.getElementById("confirm-cancel");
+            const opener = document.activeElement;
 
             titleNode.textContent = title;
             messageNode.textContent = message;
@@ -989,25 +998,70 @@ const app = {
             input.placeholder = requireText ? `请输入：${requireText}` : "";
             input.classList.toggle("hidden", !requireText);
             backdrop.classList.remove("hidden");
+            // 需要输入确认文本时焦点给输入框，否则给取消按钮：
+            // 删除不可恢复，默认焦点不应该停在“确认执行”上。
             if (requireText) input.focus();
+            else cancel.focus();
 
             const cleanup = (value) => {
                 backdrop.classList.add("hidden");
                 ok.removeEventListener("click", onOk);
                 cancel.removeEventListener("click", onCancel);
+                backdrop.removeEventListener("mousedown", onBackdrop);
+                document.removeEventListener("keydown", onKeydown, true);
+                if (opener && typeof opener.focus === "function") opener.focus();
                 resolve(value);
             };
             const onOk = () => {
                 if (requireText && input.value.trim() !== requireText) {
                     this.log(`确认文本不匹配，需要输入：${requireText}`, "warning");
+                    input.focus();
                     return;
                 }
                 cleanup(true);
             };
             const onCancel = () => cleanup(false);
+            const onBackdrop = (event) => {
+                if (event.target === backdrop) cleanup(false);
+            };
+            // Esc 取消；焦点在输入框时回车等同确认。弹窗是模态的，
+            // 用捕获阶段监听避免被下层控件先吃掉按键。
+            const onKeydown = (event) => {
+                if (event.key === "Escape") {
+                    event.preventDefault();
+                    cleanup(false);
+                } else if (event.key === "Enter" && (!requireText || document.activeElement === input)) {
+                    event.preventDefault();
+                    onOk();
+                } else if (event.key === "Tab") {
+                    this.trapFocus(event, backdrop);
+                }
+            };
+
             ok.addEventListener("click", onOk);
             cancel.addEventListener("click", onCancel);
+            backdrop.addEventListener("mousedown", onBackdrop);
+            document.addEventListener("keydown", onKeydown, true);
         });
+    },
+
+    // 把 Tab 循环限制在弹窗内，避免焦点跑到背后被遮住的控件上。
+    trapFocus(event, container) {
+        // 只取真正可聚焦的控件：弹窗里的 <use href="#..."> 也带 href，
+        // 用宽泛的 [href] 会把 SVG 引用算进来，Tab 循环就断在看不见的节点上。
+        const focusable = Array.from(
+            container.querySelectorAll("button, input, select, textarea, a[href], [tabindex]:not([tabindex='-1'])")
+        ).filter((node) => !node.classList.contains("hidden") && !node.disabled && node.offsetParent !== null);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
     },
 
     log(message, type = "normal") {
@@ -1106,6 +1160,13 @@ const app = {
         const wrap = this.el("div", "avatar-line");
         const img = this.el("img", "avatar");
         img.alt = "";
+        img.loading = "lazy";
+        // B 站图床按 Referer 拦截外链，带上 referrer 会拿到 403；
+        // 拦不住的情况（网络失败、图片被删）再退回本地生成的字母头像。
+        img.referrerPolicy = "no-referrer";
+        img.addEventListener("error", () => {
+            img.src = this.inlineAvatar(title);
+        }, { once: true });
         img.src = src || this.inlineAvatar(title);
         const text = this.el("div", "name-cell");
         text.appendChild(this.el("strong", "", title));
@@ -1117,7 +1178,7 @@ const app = {
 
     inlineAvatar(seed) {
         const label = encodeURIComponent(String(seed || "BC").slice(0, 2).toUpperCase());
-        return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='76' height='76'%3E%3Crect width='76' height='76' rx='38' fill='%2300a8d8'/%3E%3Ctext x='38' y='45' text-anchor='middle' font-family='Arial' font-size='22' font-weight='700' fill='white'%3E${label}%3C/text%3E%3C/svg%3E`;
+        return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='76' height='76'%3E%3Crect width='76' height='76' rx='38' fill='%230ea5e9'/%3E%3Ctext x='38' y='45' text-anchor='middle' font-family='Arial' font-size='22' font-weight='700' fill='white'%3E${label}%3C/text%3E%3C/svg%3E`;
     },
 
     resourceCard({ checkbox = null, title, meta, desc, actions = [] }) {
