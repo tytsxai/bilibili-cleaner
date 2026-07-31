@@ -155,7 +155,9 @@ Windows PowerShell 激活虚拟环境：
 
 Web UI 现在是一个可独立使用的本地清理控制台，不再只是“一键清空”入口。它适合普通用户在浏览器里完成扫码登录、列表预览、筛选候选、选择性删除、关注分组复核和异步任务进度查看；CLI、HTTP API 和 AI Agent 仍然共享同一套后端服务层，适合更高级的自动化流程。
 
-> 截图使用脱敏演示数据，不包含真实账号 UID、昵称、Cookie 或清理记录。
+界面默认深色，可在右上角切换浅色主题；侧边栏可折叠，工作区、指标卡和任务日志面板在窄屏下会自动重排。
+
+> 截图使用脱敏演示数据，不包含真实账号 UID、昵称、Cookie 或清理记录。可用 `http://localhost:8000/?demo=1` 直接进入同样的演示模式。
 
 ![Bilibili Cleaner Web dashboard](docs/assets/web-dashboard.png)
 

@@ -95,7 +95,9 @@ Then open:
 
 The Web UI is a local account cleanup console, not just a set of wipe buttons. It lets regular users scan to log in, preview lists, filter candidates, delete selected items, tag followings for manual review, and watch async task progress. The CLI, HTTP API, and AI-agent workflows continue to share the same backend service layer.
 
-> Screenshots use sanitized demo data. They do not contain real account IDs, names, cookies, or cleanup records.
+The console is dark by default with a light theme toggle in the top-right corner. The sidebar collapses, and the workspaces, metric cards, and task/log panel reflow on narrow screens.
+
+> Screenshots use sanitized demo data. They do not contain real account IDs, names, cookies, or cleanup records. Open `http://localhost:8000/?demo=1` to explore the same demo mode locally.
 
 ![Bilibili Cleaner Web dashboard](docs/assets/web-dashboard.png)
 
