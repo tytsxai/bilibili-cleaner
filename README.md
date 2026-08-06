@@ -377,6 +377,18 @@ B 站没有真正的批量取关接口，底层只能逐个 `fid` 调用，加�
 - [nemo2011/bilibili-api](https://github.com/nemo2011/bilibili-api) — 动态和 WBI 签名参考。
 - [FastAPI](https://fastapi.tiangolo.com/) — Web API 框架。
 
+## 搜索关键词 / Search Keywords
+
+**中文**：B 站账号清理、哔哩哔哩批量取关、B 站清理收藏夹、删除动态、清空观看历史、B 站隐私清理、自托管 B 站工具、Bilibili Cleaner、B 站 OpenAPI 清理。
+
+**English**: Bilibili account cleaner, bulk unfollow Bilibili, favorites cleanup, delete dynamics, clear watch history, self-hosted Bilibili tool, Bilibili privacy tool, Bilibili CLI, FastAPI Bilibili API.
+
+**GitHub About 建议**：`Self-hosted Bilibili account cleaner — Web UI, FastAPI, CLI for bulk unfollow, favorites, dynamics, and watch history.`
+
+**Topics 建议**：`bilibili` `bilibili-cleaner` `account-cleanup` `bulk-unfollow` `privacy-tool` `self-hosted` `fastapi` `typer` `openapi` `cli`
+
+AI 检索摘要：[llms.txt](llms.txt)。
+
 ## 免责声明 / Disclaimer
 
 本项目仅用于用户清理自己的哔哩哔哩账号数据。所有删除操作不可恢复，使用前请确认数据和账号归属，并遵守相关平台规则和法律法规。本项目与哔哩哔哩官方无关联。
